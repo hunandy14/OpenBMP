@@ -14,13 +14,13 @@ using namespace std;
 using uch = unsigned char;
 //----------------------------------------------------------------
 // 寫 Bmp 檔
-void OpenBMP::raw2bmp( string name, vector<uch>& raw,
+void OpenBMP::bmpWrite( string name, vector<uch>& raw,
 	uint32_t width, uint32_t height, uint16_t bits)
 {
 	// 檔案資訊
-	BmpFileHeader file_h = makeFH(width, height, bits);
+	BmpFileHeader file_h(width, height, bits);
 	// 圖片資訊
-	BmpInfoHeader info_h = makeIH(width, height, bits);
+	BmpInfoHeader info_h(width, height, bits);
 	// 寫檔
 	ofstream bmp(name, ios::binary);
 	bmp.exceptions(ifstream::failbit|ifstream::badbit);
@@ -51,7 +51,7 @@ void OpenBMP::raw2bmp( string name, vector<uch>& raw,
 	}
 }
 // 讀 Bmp 檔案
-void OpenBMP::read_bmp(vector<uch>& raw, string name,
+void OpenBMP::bmpRead(vector<uch>& raw, string name,
 	uint32_t* width, uint32_t* height, uint16_t* bits) {
 	ifstream bmp(name.c_str(), ios::binary);
 	bmp.exceptions(ifstream::failbit|ifstream::badbit);
@@ -94,13 +94,13 @@ void OpenBMP::read_bmp(vector<uch>& raw, string name,
 }
 //----------------------------------------------------------------
 // 寫 Raw 檔
-void OpenBMP::write_raw(std::string name, std::vector<uch>& raw) {
+void OpenBMP::rawWrite(std::string name, std::vector<uch>& raw) {
 	std::ofstream raw_file(name.c_str(), std::ios::binary);
 	raw_file.exceptions(std::ifstream::failbit|std::ifstream::badbit);
 	raw_file.write(reinterpret_cast<char*>(raw.data()), raw.size());
 }
 // 讀 Raw 檔
-void OpenBMP::read_raw(std::vector<uch>& raw, std::string name) {
+void OpenBMP::rawRead(std::vector<uch>& raw, std::string name) {
 	std::ifstream raw_file(name.c_str(), 
 		std::ios::binary | std::ios::ate);
 	raw_file.exceptions(std::ifstream::failbit|std::ifstream::badbit);

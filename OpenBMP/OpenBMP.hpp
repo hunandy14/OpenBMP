@@ -34,6 +34,13 @@ struct BmpFileHeader{
 	uint16_t bfReserved1=0;
 	uint16_t bfReserved2=0;
 	uint32_t bfOffBits=54;
+	// constructor
+	BmpFileHeader() = default;
+	BmpFileHeader(uint32_t width, uint32_t height, uint16_t bits):
+		bfSize(bfOffBits + width*height*bits/8)
+	{
+		if(bits==8) {bfSize += 1024, bfOffBits += 1024;}
+	}
 	// fstream
 	friend std::ofstream& operator<<(
 		std::ofstream& os, const BmpFileHeader& obj);
@@ -82,6 +89,14 @@ struct BmpInfoHeader{
 	uint32_t biYPelsPerMeter=0; // 120dpi=4724, 300dpi=11811
 	uint32_t biClrUsed=0;
 	uint32_t biClrImportant=0;
+	// constructor
+	BmpInfoHeader() = default;
+	BmpInfoHeader(uint32_t width, uint32_t height, uint16_t bits):
+		biWidth(width), biHeight(height), biBitCount(bits),
+		biSizeImage(width*height * bits/8)
+	{
+		if(bits==8) {biClrUsed=256;}
+	}
 	// fstream
 	friend std::ofstream& operator<<(
 		std::ofstream& os, const BmpInfoHeader& obj);
@@ -136,31 +151,11 @@ class OpenBMP {
 private:
 	using uch = unsigned char;
 	// RGB 轉灰階公式
-	static uch rgb2gray(uch* p) {
+	static uch rgb2gray(const uch* p) {
 		return ((
 			19595 * (*(p+0))+
 			38469 * (*(p+1))+
 			7472  * (*(p+2))) >> 16);
-	}
-	// 創建檔頭
-	static BmpFileHeader makeFH(
-		uint32_t width, uint32_t height, uint16_t bits)
-	{
-		BmpFileHeader file_h;
-		file_h.bfSize = file_h.bfOffBits + width*height * bits/8;
-		if(bits==8) {file_h.bfSize += 1024, file_h.bfOffBits += 1024;}
-		return file_h;
-	}
-	static BmpInfoHeader makeIH(
-		uint32_t width, uint32_t height, uint16_t bits)
-	{
-		BmpInfoHeader info_h;
-		info_h.biWidth = width;
-		info_h.biHeight = height;
-		info_h.biBitCount = bits;
-		info_h.biSizeImage = width*height * bits/8;
-		if(bits==8) {info_h.biClrUsed=256;}
-		return info_h;
 	}
 public:
 	// 轉灰階
@@ -176,16 +171,16 @@ public:
 	}
 public:
 	// 讀 Bmp 檔案
-	static void read_bmp(std::vector<uch>& raw, std::string name,
+	static void bmpRead(std::vector<uch>& raw, std::string name,
 		uint32_t* width=nullptr, uint32_t* height=nullptr, 
 		uint16_t* bits=nullptr);
 	// 寫 Bmp 檔
-	static void raw2bmp(std::string name, std::vector<uch>& src,
+	static void bmpWrite(std::string name, std::vector<uch>& src,
 		uint32_t width, uint32_t height, uint16_t bits=24);
 	// 讀 Raw 檔
-	static void read_raw(std::vector<uch>& src, std::string name);
+	static void rawRead(std::vector<uch>& src, std::string name);
 	// 寫 Raw 檔
-	static void write_raw(std::string name, std::vector<uch>& src);
+	static void rawWrite(std::string name, std::vector<uch>& src);
 };
 
 
