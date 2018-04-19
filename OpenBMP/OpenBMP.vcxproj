@@ -145,11 +145,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="OpenBMP.cpp" />
+    <ClCompile Include="OpenBMP\OpenBMP.cpp" />
     <ClCompile Include="OpenBMP_main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OpenBMP.hpp" />
+    <ClInclude Include="OpenBMP\OpenBMP.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

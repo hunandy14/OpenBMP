@@ -5,25 +5,21 @@ By   : CharlotteHonG
 Final: 2018/04/18
 
 使用說明：
-
-// 宣告資料項目
-string filename = "kanna.bmp";
+// 資料結構
 vector<unsigned char> raw_img;
-uint32_t weidth, heigh;
+uint32_t width, height;
 uint16_t bits;
-// 讀 Bmp
-Raw2Img::read_bmp(raw_img, filename, &weidth, &heigh, &bits);
-// 寫 raw
-Raw2Img::write_raw("out.raw", raw_img);
-// 寫 Bmp
-Raw2Img::raw2bmp("out.bmp", raw_img, weidth, heigh, bits);
-// 轉灰階 
-Raw2Img::raw2gray(raw_img);
-Raw2Img::raw2bmp("out.bmp", raw_img, weidth, heigh, 8);
+// 讀寫 Bmp 
+OpenBMP::bmpRead(raw_img, "ImgInput/kanna.bmp", &width, &height, &bits);
+OpenBMP::bmpWrite("ImgOutput/out_kanna.bmp", raw_img, width, height, bits);
+// 寫 raw 檔案
+OpenBMP::rawWrite("ImgOutput/kanna.raw", raw_img);
+// 轉灰階
+OpenBMP::raw2gray(raw_img, raw_img);
+OpenBMP::bmpWrite("ImgOutput/out_kanna_gray.bmp", raw_img, width, height, 8);
 *****************************************************************/
 #pragma once
 #include <fstream>
-
 
 //----------------------------------------------------------------
 // 檔案檔頭 (BITMAPFILEHEADER)
@@ -138,15 +134,6 @@ inline std::ostream& operator<<(
 
 
 //----------------------------------------------------------------
-struct basic_ImgData {
-	std::vector<unsigned char> raw_img;
-	uint32_t width;
-	uint32_t height;
-	uint16_t bits;
-};
-
-
-//----------------------------------------------------------------
 class OpenBMP {
 private:
 	using uch = unsigned char;
@@ -165,9 +152,10 @@ public:
 			dst.resize(src.size()/3);
 		// 轉換
 		#pragma omp parallel for
-		for (unsigned i = 0; i < src.size()/3; ++i) {
+		for (int i = 0; i < src.size()/3; ++i) {
 			dst[i] = rgb2gray(&src[i*3]);
-		} dst.resize(src.size()/3);
+		} 
+		dst.resize(src.size()/3);
 	}
 public:
 	// 讀 Bmp 檔案
@@ -185,3 +173,54 @@ public:
 
 
 //----------------------------------------------------------------
+struct basic_ImgData {
+	std::vector<unsigned char> raw_img;
+	uint32_t width;
+	uint32_t height;
+	uint16_t bits;
+};
+
+
+class ImgData: public basic_ImgData {
+public:
+	ImgData(std::string name) {
+		OpenBMP::bmpRead(raw_img, name, &width, &height, &bits);
+	}
+	void write(std::string name) {
+		OpenBMP::bmpWrite(name, raw_img, width, height, bits);
+	}
+public:
+	std::vector<float> img;
+};
+
+
+class ImgData_nor: public basic_ImgData {
+public:
+	ImgData_nor(std::string name) {
+		OpenBMP::bmpRead(raw_img, name, &width, &height, &bits);
+		Normalization();
+		raw_img.clear();
+	}
+	void write(std::string name) {
+		reNormalization();
+		OpenBMP::bmpWrite(name, raw_img, width, height, bits);
+		nor_img.clear();
+	}
+public:
+	void Normalization() {
+		nor_img.resize(raw_img.size());
+		#pragma omp parallel for
+		for (int i = 0; i < nor_img.size(); i++) {
+			nor_img[i] = raw_img[i] /255.0;
+		}
+	}
+	void reNormalization() {
+		raw_img.resize(nor_img.size());
+		#pragma omp parallel for
+		for (int i = 0; i < nor_img.size(); i++) {
+			raw_img[i] = nor_img[i] *255.0;
+		}
+	}
+public:
+	std::vector<float> nor_img;
+};

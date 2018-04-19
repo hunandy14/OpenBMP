@@ -13,18 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="來源檔案\OpenBMP">
+      <UniqueIdentifier>{015da67f-37d4-49bf-a830-c498fe655678}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="OpenBMP.cpp">
-      <Filter>來源檔案</Filter>
-    </ClCompile>
     <ClCompile Include="OpenBMP_main.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+    <ClCompile Include="OpenBMP\OpenBMP.cpp">
+      <Filter>來源檔案\OpenBMP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OpenBMP.hpp">
-      <Filter>標頭檔</Filter>
+    <ClInclude Include="OpenBMP\OpenBMP.hpp">
+      <Filter>來源檔案\OpenBMP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

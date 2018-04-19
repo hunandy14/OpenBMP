@@ -6,8 +6,10 @@ Final: 2017/06/14
 *****************************************************************/
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
+#include <Timer.hpp>
 #include "OpenBMP.hpp"
 
 using namespace std;
@@ -34,6 +36,8 @@ void OpenBMP::bmpWrite( string name, vector<uch>& raw,
 	// 寫入圖片資訊
 	size_t realW = info_h.biWidth * info_h.biBitCount/8.0;
 	size_t alig = (realW*3) % 4;
+
+
 	for(int j = height-1; j >= 0; --j) {
 		for(unsigned i = 0; i < width; ++i) {
 			if(bits==24) {

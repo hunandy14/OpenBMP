@@ -7,25 +7,17 @@ Final: 2018/04/18
 #include <iostream>
 #include <vector>
 #include <Timer.hpp>
-#include "OpenBMP.hpp"
+#include "OpenBMP\OpenBMP.hpp"
 using namespace std;
 //================================================================
 int main(int argc, char const *argv[]) {
+	ImgData img("ImgInput/kanna.bmp");
 	Timer t1;
-	vector<unsigned char> raw_img;
-	uint32_t weidth, heigh;
-	uint16_t bits;
-	/* Åª¼g Bmp */
-	OpenBMP::bmpRead(raw_img, "ImgInput/kanna.bmp", &weidth, &heigh, &bits);
+	img.write("ImgOutput/out_kanna.bmp");
+	t1.print("img");
 
-	OpenBMP::rawWrite("ImgOutput/kanna.raw", raw_img);
-	OpenBMP::bmpWrite("ImgOutput/out_kanna.bmp", raw_img, weidth, heigh, bits);
-	/* Âà¦Ç¶¥ */
-	t1.start();
-	OpenBMP::raw2gray(raw_img, raw_img);
-	t1.print(" raw2gray");
-	OpenBMP::bmpWrite("ImgOutput/out_kanna_gray.bmp", raw_img, weidth, heigh, 8);
-
+	ImgData_nor img_nor("ImgInput/kanna.bmp");
+	img_nor.write("ImgOutput/out_kanna_nor.bmp");
 	return 0;
 }
 //================================================================
