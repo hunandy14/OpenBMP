@@ -172,7 +172,7 @@ struct basic_ImgData {
 
 
 class ImgData: public basic_ImgData {
-private:
+private: // 型態宣告
 	using uch = unsigned char;
 
 public: // 建構子
@@ -203,13 +203,14 @@ public: // 存取方法
 	inline const uch* at2d(size_t y, size_t x) const {
 		return &raw_img[(y*width + x) *(bits>>3)];
 	}
-	std::vector<float> at2d_linear(float y, float x) const {
-		std::vector<float> RGB(bits>>3);
+	// 線性插值(快速測試用, RGB效率很差)
+	auto at2d_linear(double y, double x) const { 
+		std::vector<double> RGB(bits>>3);
 		// 整數就不算了
 		if (y==(int)y and x==(int)x) {
 			auto p = this->at2d(y, x);
 			for (int i = 0; i < RGB.size(); i++)
-				RGB[i] = static_cast<float>(p[i]);
+				RGB[i] = static_cast<double>(p[i]);
 			return RGB;
 		}
 		// 獲取鄰點
@@ -218,20 +219,20 @@ public: // 存取方法
 		int y0 = (int)(y);
 		int y1 = (y)==(int)(y)? (int)(y): (int)(y+1.0);
 		// 獲取比例
-		float dx1 = x -  x0;
-		float dx2 = 1 - dx1;
-		float dy1 = y -  y0;
-		float dy2 = 1 - dy1;
+		double dx1 = x -  x0;
+		double dx2 = 1 - dx1;
+		double dy1 = y -  y0;
+		double dy2 = 1 - dy1;
 		// 計算插值
 		for (int i = 0; i < RGB.size(); i++) {
 			// 獲取點
-			const float& A = raw_img[(y0*width + x0)*(bits>>3) + i];
-			const float& B = raw_img[(y0*width + x1)*(bits>>3) + i];
-			const float& C = raw_img[(y1*width + x0)*(bits>>3) + i];
-			const float& D = raw_img[(y1*width + x1)*(bits>>3) + i];
+			const double& A = raw_img[(y0*width + x0)*(bits>>3) + i];
+			const double& B = raw_img[(y0*width + x1)*(bits>>3) + i];
+			const double& C = raw_img[(y1*width + x0)*(bits>>3) + i];
+			const double& D = raw_img[(y1*width + x1)*(bits>>3) + i];
 			// 乘出比例(要交叉)
-			float AB = A*dx2 + B*dx1;
-			float CD = C*dx2 + D*dx1;
+			double AB = A*dx2 + B*dx1;
+			double CD = C*dx2 + D*dx1;
 			RGB[i] = AB*dy2 + CD*dy1;
 		}
 		return RGB;
@@ -291,6 +292,8 @@ public: // 自訂方法
 		}
 		return img;
 	}
+public: // 畫線
+
 };
 
 

@@ -55,26 +55,29 @@ void WarpScale(const basic_ImgData &src, basic_ImgData &dst, double Ratio){
 	dst.width  = newW;
 	dst.height = newH;
 	dst.bits   = src.bits;
+	// 縮小的倍率
+	double r1W = ((double)src.width )/(dst.width );
+	double r1H = ((double)src.height)/(dst.height);
+	// 放大的倍率
+	double r2W = (src.width -1.0)/(dst.width -1.0);
+	double r2H = (src.height-1.0)/(dst.height-1.0);
+	// 縮小時候的誤差
+	double deviW = ((src.width-1.0)  - (dst.width -1.0)*(r1W)) /dst.width;
+	double deviH = ((src.height-1.0) - (dst.height-1.0)*(r1H)) /dst.height;
 	// 跑新圖座標
-
-	double r1W = (src.width -1.0) / (newW-1.0);
-	double r1H = (src.height-1.0) / (newH-1.0);
-	double r2W = (src.width +1.0) / (newW);
-	double r2H = (src.height+1.0) / (newH);
-
-
-	int i, j;
-#pragma omp parallel for private(i, j)
-	for (j = 0; j < newH; ++j) {
-		for (i = 0; i < newW; ++i) {
+#pragma omp parallel for
+	for (int j = 0; j < newH; ++j) {
+		for (int i = 0; i < newW; ++i) {
 			// 調整對齊
 			double srcY, srcX;
-			if (Ratio < 1) {
-				srcY = ((j+0.5f)/Ratio) - 0.5;
-				srcX = ((i+0.5f)/Ratio) - 0.5;
-			} else {
-				srcY = j*(src.height-1.0) / (newH-1.0);
-				srcX = i*(src.width -1.0) / (newW-1.0);
+			if (Ratio < 1.0) {
+				/*srcX = (i+0.5) * ((double)src.width /dst.width ) - 0.5;
+				srcY = (j+0.5) * ((double)src.height/dst.height) - 0.5;*/
+				srcX = i*(r1W+deviW);
+				srcY = j*(r1H+deviH);
+			} else if (Ratio >= 1.0) {
+				srcX = i*r2W;
+				srcY = j*r2H;
 			}
 			// 獲取插補值
 			unsigned char* p = &dst.raw_img[(j*newW + i) *3];
@@ -101,7 +104,7 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 	double deviW = ((src.width-1.0)  - (dst.width -1.0)*(r1W)) /dst.width;
 	double deviH = ((src.height-1.0) - (dst.height-1.0)*(r1H)) /dst.height;
 
-//#pragma omp parallel for
+#pragma omp parallel for
 	for (int j = 0; j < dst.height; j++) {
 		for (int i = 0; i < dst.width; i++) {
 			double ratio = (double)dst.width/src.width;
@@ -118,6 +121,7 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			auto dstImg = dst.at2d(j, i);
 			auto srcImg = src.at2d_linear(srcY, srcX);
 
+			// 測試縮放有無正常用
 			if (j<=0 and i<=2) {
 				cout << srcX << ", " << srcY << endl;
 			} else if (j == dst.height-1 and i == dst.width-1) {
@@ -160,7 +164,7 @@ int main(int argc, char const *argv[]) {
 	snip.bmp("ImgOutput/out_test.bmp");*/
 
 	// 線性插補測試
-	ImgData imgTest1,imgTest2, temp1, temp2;
+	ImgData imgTest1,imgTest2, temp1, temp2, temp;
 	double ratio=2;
 	bilinear(img, imgTest1, 4);
 	/*bilinear(imgTest1, imgTest2, 2.0);
@@ -168,10 +172,9 @@ int main(int argc, char const *argv[]) {
 	bilinear(imgTest1, imgTest2, 2.0);
 	bilinear(imgTest2, imgTest1, 0.5);
 	bilinear(imgTest1, imgTest2, 2.0);*/
-	imgTest1.bmp("ImgOutput/out_test.bmp");
+	//imgTest1.bmp("ImgOutput/out_test.bmp");
 
-	/*Timer t0;
-	ImgData imgTest1,imgTest2, temp;
+	Timer t0;
 	t0.start();
 	bilinear(img, temp, 0.5);
 	bilinear(temp, imgTest1, 2);
@@ -179,11 +182,11 @@ int main(int argc, char const *argv[]) {
 	imgTest1.bmp("ImgOutput/out_test1.bmp");
 
 	t0.start();
-	WarpScale(img, temp, 0.5);
 	WarpScale(temp, imgTest2, 2);
+	WarpScale(img, temp, 0.5);
 	t0.print("t2");
 	temp.bmp("ImgOutput/out_test2.bmp");
-	imgTest2.bmp("ImgOutput/out_test22.bmp");*/
+	imgTest2.bmp("ImgOutput/out_test22.bmp");
 
 	cout << endl;
 	// 大小相符
