@@ -10,29 +10,115 @@ Final: 2018/04/18
 #include "OpenBMP\OpenBMP.hpp"
 using namespace std;
 
+
+// 快速 線性插值
+inline static void fast_Bilinear_rgb(unsigned char* p, 
+	const basic_ImgData& src, double y, double x)
+{
+	// 起點
+	int _x = (int)x;
+	int _y = (int)y;
+	// 左邊比值
+	double l_x = x - (double)_x;
+	double r_x = 1.f - l_x;
+	double t_y = y - (double)_y;
+	double b_y = 1.f - t_y;
+	int srcW = src.width;
+	int srcH = src.height;
+
+	// 計算RGB
+	double R , G, B;
+	int x2 = (_x+1) > src.width -1? src.width -1: _x+1;
+	int y2 = (_y+1) > src.height-1? src.height-1: _y+1;
+	R  = (double)src.raw_img[(_y * srcW + _x) *3 + 0] * (r_x * b_y);
+	G  = (double)src.raw_img[(_y * srcW + _x) *3 + 1] * (r_x * b_y);
+	B  = (double)src.raw_img[(_y * srcW + _x) *3 + 2] * (r_x * b_y);
+	R += (double)src.raw_img[(_y * srcW + x2) *3 + 0] * (l_x * b_y);
+	G += (double)src.raw_img[(_y * srcW + x2) *3 + 1] * (l_x * b_y);
+	B += (double)src.raw_img[(_y * srcW + x2) *3 + 2] * (l_x * b_y);
+	R += (double)src.raw_img[(y2 * srcW + _x) *3 + 0] * (r_x * t_y);
+	G += (double)src.raw_img[(y2 * srcW + _x) *3 + 1] * (r_x * t_y);
+	B += (double)src.raw_img[(y2 * srcW + _x) *3 + 2] * (r_x * t_y);
+	R += (double)src.raw_img[(y2 * srcW + x2) *3 + 0] * (l_x * t_y);
+	G += (double)src.raw_img[(y2 * srcW + x2) *3 + 1] * (l_x * t_y);
+	B += (double)src.raw_img[(y2 * srcW + x2) *3 + 2] * (l_x * t_y);
+
+	*(p+0) = (unsigned char) R;
+	*(p+1) = (unsigned char) G;
+	*(p+2) = (unsigned char) B;
+}
+void WarpScale(const basic_ImgData &src, basic_ImgData &dst, double Ratio){
+	int newH = (int)((src.height * Ratio) +0.5);
+	int newW = (int)((src.width  * Ratio) +0.5);
+	// 初始化 dst
+	dst.raw_img.resize(newW * newH * src.bits/8.0);
+	dst.width  = newW;
+	dst.height = newH;
+	dst.bits   = src.bits;
+	// 跑新圖座標
+
+	double r1W = (src.width -1.0) / (newW-1.0);
+	double r1H = (src.height-1.0) / (newH-1.0);
+	double r2W = (src.width +1.0) / (newW);
+	double r2H = (src.height+1.0) / (newH);
+
+
+	int i, j;
+#pragma omp parallel for private(i, j)
+	for (j = 0; j < newH; ++j) {
+		for (i = 0; i < newW; ++i) {
+			// 調整對齊
+			double srcY, srcX;
+			if (Ratio < 1) {
+				srcY = ((j+0.5f)/Ratio) - 0.5;
+				srcX = ((i+0.5f)/Ratio) - 0.5;
+			} else {
+				srcY = j*(src.height-1.0) / (newH-1.0);
+				srcX = i*(src.width -1.0) / (newW-1.0);
+			}
+			// 獲取插補值
+			unsigned char* p = &dst.raw_img[(j*newW + i) *3];
+			if (Ratio>1) {
+				fast_Bilinear_rgb(p, src, srcY, srcX);
+			}
+		}
+	}
+}
+
 void bilinear(const ImgData& src, ImgData& dst, double ratio) {
-	Timer t0;
-	t0.start();
+	//Timer t0;
+	//t0.start();
 
 	dst.resize(src.width*ratio, src.height*ratio, src.bits);
-#pragma omp parallel for
+
+	// 縮小的倍率
+	double r1W = ((double)src.width )/(dst.width );
+	double r1H = ((double)src.height)/(dst.height);
+	// 放大的倍率
+	double r2W = (src.width -1.0)/(dst.width -1.0);
+	double r2H = (src.height-1.0)/(dst.height-1.0);
+	// 縮小時候的誤差
+	double deviW = ((src.width-1.0)  - (dst.width -1.0)*(r1W)) /dst.width;
+	double deviH = ((src.height-1.0) - (dst.height-1.0)*(r1H)) /dst.height;
+
+//#pragma omp parallel for
 	for (int j = 0; j < dst.height; j++) {
 		for (int i = 0; i < dst.width; i++) {
 			double ratio = (double)dst.width/src.width;
-			float srcY=0, srcX=0;
-			if (ratio >= 1) {
-				srcX = (i / ((double)(dst.width -1.0)/(src.width -1.0)));
-				srcY = (j / ((double)(dst.height-1.0)/(src.height-1.0)));
-			} else if (ratio < 1) {
-				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
-				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
-				srcX = i * ((src.width +1.0)/dst.width );
-				srcY = j * ((src.height+1.0)/dst.height);
+			double srcY=0, srcX=0;
+			if (ratio < 1.0) {
+				/*srcX = (i+0.5) * ((double)src.width /dst.width ) - 0.5;
+				srcY = (j+0.5) * ((double)src.height/dst.height) - 0.5;*/
+				srcX = i*(r1W+deviW);
+				srcY = j*(r1H+deviH);
+			} else if (ratio >= 1.0) {
+				srcX = i*r2W;
+				srcY = j*r2H;
 			}
 			auto dstImg = dst.at2d(j, i);
 			auto srcImg = src.at2d_linear(srcY, srcX);
 
-			if (j==0 and i==0) {
+			if (j<=0 and i<=2) {
 				cout << srcX << ", " << srcY << endl;
 			} else if (j == dst.height-1 and i == dst.width-1) {
 				cout << srcX << ", " << srcY << endl;
@@ -43,7 +129,7 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			}
 		}
 	}
-	t0.print("bilinear");
+	//t0.print("bilinear");
 }
 //================================================================
 int main(int argc, char const *argv[]) {
@@ -74,15 +160,32 @@ int main(int argc, char const *argv[]) {
 	snip.bmp("ImgOutput/out_test.bmp");*/
 
 	// 線性插補測試
-	/*ImgData imgTest1,imgTest2;
-	bilinear(img, imgTest1, 0.5);
-	bilinear(imgTest1, imgTest2, 2.0);
+	ImgData imgTest1,imgTest2, temp1, temp2;
+	double ratio=2;
+	bilinear(img, imgTest1, 4);
+	/*bilinear(imgTest1, imgTest2, 2.0);
 	bilinear(imgTest2, imgTest1, 0.5);
 	bilinear(imgTest1, imgTest2, 2.0);
 	bilinear(imgTest2, imgTest1, 0.5);
-	bilinear(imgTest1, imgTest2, 2.0);
-	imgTest2.bmp("ImgOutput/out_test.bmp");*/
+	bilinear(imgTest1, imgTest2, 2.0);*/
+	imgTest1.bmp("ImgOutput/out_test.bmp");
 
+	/*Timer t0;
+	ImgData imgTest1,imgTest2, temp;
+	t0.start();
+	bilinear(img, temp, 0.5);
+	bilinear(temp, imgTest1, 2);
+	t0.print("t1");
+	imgTest1.bmp("ImgOutput/out_test1.bmp");
+
+	t0.start();
+	WarpScale(img, temp, 0.5);
+	WarpScale(temp, imgTest2, 2);
+	t0.print("t2");
+	temp.bmp("ImgOutput/out_test2.bmp");
+	imgTest2.bmp("ImgOutput/out_test22.bmp");*/
+
+	cout << endl;
 	// 大小相符
 	/*ImgData imgTest;
 	cout << "imgTest==img " << (imgTest==img) << endl;
