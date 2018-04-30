@@ -16,7 +16,7 @@ using namespace std;
 using uch = unsigned char;
 //----------------------------------------------------------------
 // 讀 Bmp 檔案
-void OpenBMP::bmpRead(vector<uch>& raw, string name,
+void OpenBMP::bmpRead(vector<uch>& dst, string name,
 	uint32_t* width, uint32_t* height, uint16_t* bits) {
 	ifstream bmp(name.c_str(), ios::binary);
 	bmp.exceptions(ifstream::failbit|ifstream::badbit);
@@ -37,10 +37,10 @@ void OpenBMP::bmpRead(vector<uch>& raw, string name,
 	}
 	// 讀 Raw
 	bmp.seekg(file_h.bfOffBits, ios::beg);
-	raw.resize(info_h.biWidth * info_h.biHeight * (info_h.biBitCount/8));
+	dst.resize(info_h.biWidth * info_h.biHeight * (info_h.biBitCount/8));
 	size_t realW = info_h.biWidth * info_h.biBitCount/8.0;
 	size_t alig = (realW*3) % 4;
-	char* p = reinterpret_cast<char*>(raw.data());
+	char* p = reinterpret_cast<char*>(dst.data());
 	for(int j = info_h.biHeight-1; j >= 0; --j) {
 		for(unsigned i = 0; i < info_h.biWidth; ++i) {
 			// 來源是 rgb
@@ -58,7 +58,7 @@ void OpenBMP::bmpRead(vector<uch>& raw, string name,
 	}
 }
 // 寫 Bmp 檔
-void OpenBMP::bmpWrite( string name, const vector<uch>& raw,
+void OpenBMP::bmpWrite( string name, const vector<uch>& src,
 	uint32_t width, uint32_t height, uint16_t bits)
 {
 	// 檔案資訊
@@ -83,11 +83,11 @@ void OpenBMP::bmpWrite( string name, const vector<uch>& raw,
 	for(int j = height-1; j >= 0; --j) {
 		for(unsigned i = 0; i < width; ++i) {
 			if(bits==24) {
-				bmp << raw[(j*width+i)*3 + 2];
-				bmp << raw[(j*width+i)*3 + 1];
-				bmp << raw[(j*width+i)*3 + 0];
+				bmp << src[(j*width+i)*3 + 2];
+				bmp << src[(j*width+i)*3 + 1];
+				bmp << src[(j*width+i)*3 + 0];
 			} else if(bits==8) {
-				bmp << raw[(j*width+i)];
+				bmp << src[(j*width+i)];
 			}
 		}
 		// 對齊4byte
@@ -98,19 +98,19 @@ void OpenBMP::bmpWrite( string name, const vector<uch>& raw,
 }
 //----------------------------------------------------------------
 // 讀 Raw 檔
-void OpenBMP::rawRead(std::vector<uch>& raw, std::string name) {
+void OpenBMP::rawRead(std::vector<uch>& dst, std::string name) {
 	std::ifstream raw_file(name.c_str(), 
 		std::ios::binary | std::ios::ate);
 	raw_file.exceptions(std::ifstream::failbit|std::ifstream::badbit);
-	raw.resize(static_cast<size_t>(raw_file.tellg()));
+	dst.resize(static_cast<size_t>(raw_file.tellg()));
 	raw_file.seekg(0, std::ios::beg);
-	raw_file.read(reinterpret_cast<char*>(raw.data()), raw.size());
+	raw_file.read(reinterpret_cast<char*>(dst.data()), dst.size());
 	raw_file.close();
 }
 // 寫 Raw 檔
-void OpenBMP::rawWrite(std::string name, const std::vector<uch>& raw) {
+void OpenBMP::rawWrite(std::string name, const std::vector<uch>& src) {
 	std::ofstream raw_file(name.c_str(), std::ios::binary);
 	raw_file.exceptions(std::ifstream::failbit|std::ifstream::badbit);
-	raw_file.write(reinterpret_cast<const char*>(raw.data()), raw.size());
+	raw_file.write(reinterpret_cast<const char*>(src.data()), src.size());
 }
 //----------------------------------------------------------------

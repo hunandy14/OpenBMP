@@ -38,27 +38,21 @@ struct BmpFileHeader{
 		if(bits==8) {bfSize += 1024, bfOffBits += 1024;}
 	}
 	// fstream
-	friend std::ofstream& operator<<(
-		std::ofstream& os, const BmpFileHeader& obj);
-	friend std::ifstream& operator>>(
-		std::ifstream& is, BmpFileHeader& obj);
+	friend std::ofstream& operator<<(std::ofstream& os, const BmpFileHeader& obj);
+	friend std::ifstream& operator>>(std::ifstream& is, BmpFileHeader& obj);
 	// ostream
-	friend std::ostream& operator<<(
-		std::ostream& os, const BmpFileHeader& obj);
+	friend std::ostream& operator<<(std::ostream& os, const BmpFileHeader& obj);
 };
 #pragma pack() // 恢復對齊為預設
-inline std::ofstream& operator<<(
-	std::ofstream& os, const BmpFileHeader& obj){
+inline std::ofstream& operator<<(std::ofstream& os, const BmpFileHeader& obj){
 	os.write((char*)&obj, sizeof(obj));
 	return os;
 }
-inline std::ifstream& operator>>(
-	std::ifstream& is, BmpFileHeader& obj){
+inline std::ifstream& operator>>(std::ifstream& is, BmpFileHeader& obj){
 	is.read((char*)&obj, sizeof(obj));
 	return is;
 }
-inline std::ostream& operator<<(
-	std::ostream& os, const BmpFileHeader& obj){
+inline std::ostream& operator<<(std::ostream& os, const BmpFileHeader& obj){
 	using std::cout;
 	using std::endl;
 	cout << "# BmpFileHeader" << endl;
@@ -94,27 +88,21 @@ struct BmpInfoHeader{
 		if(bits==8) {biClrUsed=256;}
 	}
 	// fstream
-	friend std::ofstream& operator<<(
-		std::ofstream& os, const BmpInfoHeader& obj);
-	friend std::ifstream& operator>>(
-		std::ifstream& is, BmpInfoHeader& obj);
+	friend std::ofstream& operator<<(std::ofstream& os, const BmpInfoHeader& obj);
+	friend std::ifstream& operator>>(std::ifstream& is, BmpInfoHeader& obj);
 	// ostream
-	friend std::ostream& operator<<(
-		std::ostream& os, const BmpInfoHeader& obj);
+	friend std::ostream& operator<<(std::ostream& os, const BmpInfoHeader& obj);
 };
 #pragma pack() // 恢復對齊為預設
-inline std::ofstream& operator<<(
-	std::ofstream& os, const BmpInfoHeader& obj){
+inline std::ofstream& operator<<(std::ofstream& os, const BmpInfoHeader& obj){
 	os.write((char*)&obj, sizeof(obj));
 	return os;
 }
-inline std::ifstream& operator>>(
-	std::ifstream& is, BmpInfoHeader& obj){
+inline std::ifstream& operator>>(std::ifstream& is, BmpInfoHeader& obj){
 	is.read((char*)&obj, sizeof(obj));
 	return is;
 }
-inline std::ostream& operator<<(
-	std::ostream& os, const BmpInfoHeader& obj){
+inline std::ostream& operator<<(std::ostream& os, const BmpInfoHeader& obj){
 	using std::cout;
 	using std::endl;
 	cout << "# BmpInfoHeader" << endl;
@@ -147,7 +135,7 @@ public:
 			7472  * (*(p+2))) >> 16);
 	}
 	// 轉灰階
-	static void raw2gray(std::vector<uch>& dst, std::vector<uch>& src) {
+	static void raw2gray(std::vector<uch>& dst, const std::vector<uch>& src) {
 		if (&dst == &src) {
 			// 同一個來源轉換完再resize
 			for (int i = 0; i < src.size()/3; ++i)
@@ -162,14 +150,13 @@ public:
 	}
 public:
 	// 讀 Bmp 檔案
-	static void bmpRead(std::vector<uch>& raw, std::string name,
-		uint32_t* width=nullptr, uint32_t* height=nullptr, 
-		uint16_t* bits=nullptr);
+	static void bmpRead(std::vector<uch>& dst, std::string name,
+		uint32_t* width=nullptr, uint32_t* height=nullptr, uint16_t* bits=nullptr);
 	// 寫 Bmp 檔
 	static void bmpWrite(std::string name, const std::vector<uch>& src,
 		uint32_t width, uint32_t height, uint16_t bits=24);
 	// 讀 Raw 檔
-	static void rawRead(std::vector<uch>& src, std::string name);
+	static void rawRead(std::vector<uch>& dst, std::string name);
 	// 寫 Raw 檔
 	static void rawWrite(std::string name, const std::vector<uch>& src);
 };
@@ -189,25 +176,109 @@ private:
 	using uch = unsigned char;
 
 public: // 建構子
+	ImgData() = default;
 	ImgData(std::string name) {
 		OpenBMP::bmpRead(raw_img, name, &width, &height, &bits);
 	}
-	ImgData(std::vector<uch>& raw_img,
-		uint32_t width, uint32_t height,uint16_t bits):
+	ImgData(std::vector<uch>& raw_img, uint32_t width, uint32_t height, uint16_t bits):
 		basic_ImgData({raw_img, width, height, bits}) {}
+	ImgData(uint32_t width, uint32_t height, uint16_t bits) {
+		raw_img.resize(width*height* bits/8);
+		this->width  = width;
+		this->height = height;
+		this->bits   = bits;
+	}
 	explicit ImgData(basic_ImgData& imgData): basic_ImgData(imgData) {}
 
-public: // 基礎方法
+public: // 存取方法
 	inline uch& operator[](size_t idx) {
-		return (*this)[idx];
+		return this->raw_img[idx];
 	}
 	inline const uch& operator[](size_t idx) const {
-		return (*this)[idx];
+		return this->raw_img[idx];
+	}
+	inline uch* at2d(size_t y, size_t x) {
+		return &raw_img[(y*width + x) *(bits>>3)];
+	}
+	inline const uch* at2d(size_t y, size_t x) const {
+		return &raw_img[(y*width + x) *(bits>>3)];
+	}
+
+public: // 大小方法
+	friend inline bool operator!=(const ImgData& lhs, const ImgData& rhs) {
+		return !(lhs == rhs);
+	}
+	friend inline bool operator==(const ImgData& lhs, const ImgData& rhs) {
+		if (lhs.width == rhs.width &&  lhs.height == rhs.height) {
+			return 1;
+		} return 0;
+	}
+	const size_t size() const {
+		return this->raw_img.size();
+	}
+	void resize(uint32_t width, uint32_t height, uint16_t bits) {
+		raw_img.resize(width*height * bits>>3);
+		this->width  = width;
+		this->height = height;
+		this->bits   = bits;
+	}
+	void resize(const ImgData& src) {
+		resize(src.width, src.height, src.bits);
 	}
 
 public: // 自訂方法
-	void bmp(std::string name) {
+	void bmp(std::string name) const {
 		OpenBMP::bmpWrite(name, raw_img, width, height, bits);
+	}
+	ImgData& convertGray() {
+		OpenBMP::raw2gray(raw_img, raw_img);
+		bits = 8;
+		return *this;
+	}
+	ImgData toConvertGray() const {
+		ImgData img;
+		OpenBMP::raw2gray(img.raw_img, raw_img);
+		img.bits = 8;
+		return img;
+	}
+	ImgData toSnip (uint32_t width, uint32_t height, uint32_t y=0, uint32_t x=0) const {
+		// 檢查超過邊界
+		if (width+x > this->width or height+y > this->height)
+			throw std::out_of_range("toSnip() out of range");
+		// 開始擷取
+		ImgData img(width, height, this->bits);
+		for (int j = 0; j < img.height; j++) {
+			for (int i = 0; i < img.width; i++) {
+				auto srcIt = this->at2d(j+y, i+x);
+				auto dstIt = img.at2d(j, i);
+				for (size_t rgb = 0; rgb < bits>>3; rgb++) {
+					dstIt[rgb] = srcIt[rgb];
+				}
+			}
+		}
+		return img;
+	}
+	float at2d_linear(float y, float x) {
+		// 獲取鄰點
+		int x0 = (y>=this->height-1)? this->height-2: y;
+		int x1 = x0+1;
+		int y0 = (x>=this->width -1)? this->width -2: x;
+		int y1 = y0+1;
+		// 獲取比例
+		float dx1 = x - x0;
+		float dx2 = 1 - dx1;
+		float dy1 = y - y0;
+		float dy2 = 1 - dy1;
+		// 獲取點
+		const float& A = raw_img[y0*width + x0];
+		const float& B = raw_img[y0*width + x1];
+		const float& C = raw_img[y1*width + x0];
+		const float& D = raw_img[y1*width + x1];
+		// 乘出比例(要交叉)
+		float AB = A*dx2 + B*dx1;
+		float CD = C*dx2 + D*dx1;
+		float X = AB*dy2 + CD*dy1;
+		return X;
 	}
 };
 
