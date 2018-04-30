@@ -203,7 +203,7 @@ public: // 存取方法
 	inline const uch* at2d(size_t y, size_t x) const {
 		return &raw_img[(y*width + x) *(bits>>3)];
 	}
-	std::vector<float> at2d_linear(float y, float x) {
+	std::vector<float> at2d_linear(float y, float x) const {
 		std::vector<float> RGB(bits>>3);
 		// 整數就不算了
 		if (y==(int)y and x==(int)x) {

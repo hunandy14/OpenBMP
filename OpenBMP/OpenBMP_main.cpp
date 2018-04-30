@@ -9,6 +9,42 @@ Final: 2018/04/18
 #include <Timer.hpp>
 #include "OpenBMP\OpenBMP.hpp"
 using namespace std;
+
+void bilinear(const ImgData& src, ImgData& dst, double ratio) {
+	Timer t0;
+	t0.start();
+
+	dst.resize(src.width*ratio, src.height*ratio, src.bits);
+#pragma omp parallel for
+	for (int j = 0; j < dst.height; j++) {
+		for (int i = 0; i < dst.width; i++) {
+			double ratio = (double)dst.width/src.width;
+			float srcY=0, srcX=0;
+			if (ratio >= 1) {
+				srcX = (i / ((double)(dst.width -1.0)/(src.width -1.0)));
+				srcY = (j / ((double)(dst.height-1.0)/(src.height-1.0)));
+			} else if (ratio < 1) {
+				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
+				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
+				srcX = i * ((src.width +1.0)/dst.width );
+				srcY = j * ((src.height+1.0)/dst.height);
+			}
+			auto dstImg = dst.at2d(j, i);
+			auto srcImg = src.at2d_linear(srcY, srcX);
+
+			if (j==0 and i==0) {
+				cout << srcX << ", " << srcY << endl;
+			} else if (j == dst.height-1 and i == dst.width-1) {
+				cout << srcX << ", " << srcY << endl;
+			}
+
+			for (size_t rgb = 0; rgb < src.bits>>3; rgb++) {
+				dstImg[rgb] = srcImg[rgb];
+			}
+		}
+	}
+	t0.print("bilinear");
+}
 //================================================================
 int main(int argc, char const *argv[]) {
 	ImgData img("ImgInput/test.bmp");
@@ -37,89 +73,15 @@ int main(int argc, char const *argv[]) {
 	/*ImgData snip=img.toSnip(500, 500, 00, 100);
 	snip.bmp("ImgOutput/out_test.bmp");*/
 
-	// 絬┦础干
-	//ImgData imgTest(960, 540, 8);
-	float ratio;
-	ImgData imgTest;
-	Timer t0;
-
-	ratio=0.5;
-	imgTest.resize(img.width*ratio, img.height*ratio, img.bits);
-	t0.start();
-
-	double toleX = 1.0/imgTest.width, toleY = 1.0/imgTest.height;
-
-#pragma omp parallel for
-	for (int j = 0; j < imgTest.height; j++) {
-		for (int i = 0; i < imgTest.width; i++) {
-			double ratio = (double)imgTest.width/img.width;
-			float srcY=0, srcX=0;
-			if (ratio >= 1) {
-				srcX = (i / ((double)(imgTest.width -1.0)/(img.width -1.0)));
-				srcY = (j / ((double)(imgTest.height-1.0)/(img.height-1.0)));
-			} else if (ratio < 1) {
-				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
-				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
-				srcX = i * ((img.width +1.0)/imgTest.width );
-				srcY = j * ((img.height+1.0)/imgTest.height);
-			}
-			auto dstImg = imgTest.at2d(j, i);
-			auto srcImg = img.at2d_linear(srcY, srcX);
-
-			if (j==0 and i==0) {
-				cout << srcX << ", " << srcY << endl;
-			} else if (j == imgTest.height-1 and i == imgTest.width-1) {
-				cout << srcX << ", " << srcY << endl;
-			}
-
-			for (size_t rgb = 0; rgb < img.bits>>3; rgb++) {
-				dstImg[rgb] = srcImg[rgb];
-			}
-		}
-	}
-	t0.print("bilinear");
-
-	img=imgTest;
-
-	ratio=2;
-	imgTest.resize(img.width*ratio, img.height*ratio, img.bits);
-
-	cout << "" << endl;
-	t0.start();
-#pragma omp parallel for
-	for (int j = 0; j < imgTest.height; j++) {
-		for (int i = 0; i < imgTest.width; i++) {
-			double ratio = (double)imgTest.width/img.width;
-			float srcY=0, srcX=0;
-			if (ratio >= 1) {
-				srcX = (i / ((double)(imgTest.width -1.0)/(img.width -1.0)));
-				srcY = (j / ((double)(imgTest.height-1.0)/(img.height-1.0)));
-			} else if (ratio < 1) {
-				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
-				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
-				srcX = i * ((img.width +1.0)/imgTest.width );
-				srcY = j * ((img.height+1.0)/imgTest.height);
-			}
-			auto dstImg = imgTest.at2d(j, i);
-			auto srcImg = img.at2d_linear(srcY, srcX);
-
-			if (j==0 and i==0) {
-				cout << srcX << ", " << srcY << endl;
-			} else if (j == imgTest.height-1 and i == imgTest.width-1) {
-				cout << srcX << ", " << srcY << endl;
-			}
-
-			for (size_t rgb = 0; rgb < img.bits>>3; rgb++) {
-				dstImg[rgb] = srcImg[rgb];
-			}
-		}
-	}
-	t0.print("bilinear");
-
-
-
-
-	imgTest.bmp("ImgOutput/out_test.bmp");
+	// 絬┦础干代刚
+	/*ImgData imgTest1,imgTest2;
+	bilinear(img, imgTest1, 0.5);
+	bilinear(imgTest1, imgTest2, 2.0);
+	bilinear(imgTest2, imgTest1, 0.5);
+	bilinear(imgTest1, imgTest2, 2.0);
+	bilinear(imgTest2, imgTest1, 0.5);
+	bilinear(imgTest1, imgTest2, 2.0);
+	imgTest2.bmp("ImgOutput/out_test.bmp");*/
 
 	// 才
 	/*ImgData imgTest;
