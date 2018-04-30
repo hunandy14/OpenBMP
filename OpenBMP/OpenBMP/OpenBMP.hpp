@@ -133,29 +133,32 @@ inline std::ostream& operator<<(
 }
 
 
+
 //----------------------------------------------------------------
 class OpenBMP {
 private:
 	using uch = unsigned char;
+public:
 	// RGB 轉灰階公式
-	static uch rgb2gray(const uch* p) {
+	static inline uch rgb2gray(const uch* p) {
 		return ((
 			19595 * (*(p+0))+
 			38469 * (*(p+1))+
 			7472  * (*(p+2))) >> 16);
 	}
-public:
 	// 轉灰階
 	static void raw2gray(std::vector<uch>& dst, std::vector<uch>& src) {
-		// 判定相等
-		if(&dst!=&src)
+		if (&dst == &src) {
+			// 同一個來源轉換完再resize
+			for (int i = 0; i < src.size()/3; ++i)
+				dst[i] = rgb2gray(&src[i*3]);
 			dst.resize(src.size()/3);
-		// 轉換
-		#pragma omp parallel for
-		for (int i = 0; i < src.size()/3; ++i) {
-			dst[i] = rgb2gray(&src[i*3]);
-		} 
-		dst.resize(src.size()/3);
+		} else {
+			// 通常情況先設置好大小才轉換
+			dst.resize(src.size()/3);
+			for (int i = 0; i < src.size()/3; ++i)
+				dst[i] = rgb2gray(&src[i*3]);
+		}
 	}
 public:
 	// 讀 Bmp 檔案
@@ -163,12 +166,12 @@ public:
 		uint32_t* width=nullptr, uint32_t* height=nullptr, 
 		uint16_t* bits=nullptr);
 	// 寫 Bmp 檔
-	static void bmpWrite(std::string name, std::vector<uch>& src,
+	static void bmpWrite(std::string name, const std::vector<uch>& src,
 		uint32_t width, uint32_t height, uint16_t bits=24);
 	// 讀 Raw 檔
 	static void rawRead(std::vector<uch>& src, std::string name);
 	// 寫 Raw 檔
-	static void rawWrite(std::string name, std::vector<uch>& src);
+	static void rawWrite(std::string name, const std::vector<uch>& src);
 };
 
 
@@ -182,15 +185,30 @@ struct basic_ImgData {
 
 
 class ImgData: public basic_ImgData {
-public:
+private:
+	using uch = unsigned char;
+
+public: // 建構子
 	ImgData(std::string name) {
 		OpenBMP::bmpRead(raw_img, name, &width, &height, &bits);
 	}
-	void write(std::string name) {
+	ImgData(std::vector<uch>& raw_img,
+		uint32_t width, uint32_t height,uint16_t bits):
+		basic_ImgData({raw_img, width, height, bits}) {}
+	explicit ImgData(basic_ImgData& imgData): basic_ImgData(imgData) {}
+
+public: // 基礎方法
+	inline uch& operator[](size_t idx) {
+		return (*this)[idx];
+	}
+	inline const uch& operator[](size_t idx) const {
+		return (*this)[idx];
+	}
+
+public: // 自訂方法
+	void bmp(std::string name) {
 		OpenBMP::bmpWrite(name, raw_img, width, height, bits);
 	}
-public:
-	std::vector<float> img;
 };
 
 

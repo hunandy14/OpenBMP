@@ -11,13 +11,26 @@ Final: 2018/04/18
 using namespace std;
 //================================================================
 int main(int argc, char const *argv[]) {
-	ImgData img("ImgInput/kanna.bmp");
-	Timer t1;
-	img.write("ImgOutput/out_kanna.bmp");
-	t1.print("img");
+	/*ImgData img("ImgInput/kanna.bmp");
 
-	ImgData_nor img_nor("ImgInput/kanna.bmp");
-	img_nor.write("ImgOutput/out_kanna_nor.bmp");
+	Timer t1;
+	img.bmp("ImgOutput/out_kanna.bmp");
+	t1.print("img");*/
+
+
+	// 資料結構
+	vector<unsigned char> raw_img;
+	uint32_t width, height;
+	uint16_t bits;
+	// 讀寫 Bmp 
+	OpenBMP::bmpRead(raw_img, "ImgInput/test.bmp", &width, &height, &bits);
+	OpenBMP::bmpWrite("ImgOutput/out_test.bmp", raw_img, width, height, bits);
+	// 寫 raw 檔案
+	OpenBMP::rawWrite("ImgOutput/test.raw", raw_img);
+	// 轉灰階
+	OpenBMP::raw2gray(raw_img, raw_img);
+	OpenBMP::bmpWrite("ImgOutput/out_test_gray.bmp", raw_img, width, height, 8);
+
 	return 0;
 }
 //================================================================

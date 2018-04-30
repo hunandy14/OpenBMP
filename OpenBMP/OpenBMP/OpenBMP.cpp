@@ -16,7 +16,7 @@ using namespace std;
 using uch = unsigned char;
 //----------------------------------------------------------------
 // ¼g Bmp ÀÉ
-void OpenBMP::bmpWrite( string name, vector<uch>& raw,
+void OpenBMP::bmpWrite( string name, const vector<uch>& raw,
 	uint32_t width, uint32_t height, uint16_t bits)
 {
 	// ÀÉ®×¸ê°T
@@ -98,10 +98,10 @@ void OpenBMP::bmpRead(vector<uch>& raw, string name,
 }
 //----------------------------------------------------------------
 // ¼g Raw ÀÉ
-void OpenBMP::rawWrite(std::string name, std::vector<uch>& raw) {
+void OpenBMP::rawWrite(std::string name, const std::vector<uch>& raw) {
 	std::ofstream raw_file(name.c_str(), std::ios::binary);
 	raw_file.exceptions(std::ifstream::failbit|std::ifstream::badbit);
-	raw_file.write(reinterpret_cast<char*>(raw.data()), raw.size());
+	raw_file.write(reinterpret_cast<const char*>(raw.data()), raw.size());
 }
 // Åª Raw ÀÉ
 void OpenBMP::rawRead(std::vector<uch>& raw, std::string name) {
