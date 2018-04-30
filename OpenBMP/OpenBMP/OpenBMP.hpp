@@ -291,7 +291,6 @@ public: // ¦Û­q¤èªk
 		}
 		return img;
 	}
-	
 };
 
 

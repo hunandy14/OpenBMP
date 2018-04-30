@@ -39,29 +39,38 @@ int main(int argc, char const *argv[]) {
 
 	// 線性插補
 	//ImgData imgTest(960, 540, 8);
+	float ratio;
 	ImgData imgTest;
-	imgTest.resize(img);
-	//imgTest.resize(960, 540, img.bits);
-
 	Timer t0;
-//#pragma omp parallel for
+
+	ratio=0.5;
+	imgTest.resize(img.width*ratio, img.height*ratio, img.bits);
+	t0.start();
+
+	double toleX = 1.0/imgTest.width, toleY = 1.0/imgTest.height;
+
+#pragma omp parallel for
 	for (int j = 0; j < imgTest.height; j++) {
 		for (int i = 0; i < imgTest.width; i++) {
 			double ratio = (double)imgTest.width/img.width;
 			float srcY=0, srcX=0;
 			if (ratio >= 1) {
-				srcX = ( i / ((imgTest.width -1.0)/(img.width -1.0)) );
-				srcY = ( j / ((imgTest.height-1.0)/(img.height-1.0)) );
+				srcX = (i / ((double)(imgTest.width -1.0)/(img.width -1.0)));
+				srcY = (j / ((double)(imgTest.height-1.0)/(img.height-1.0)));
 			} else if (ratio < 1) {
-				srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
-				srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
+				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
+				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
+				srcX = i * ((img.width +1.0)/imgTest.width );
+				srcY = j * ((img.height+1.0)/imgTest.height);
 			}
-
-			//cout << srcX << ", " << srcY << endl;
-
 			auto dstImg = imgTest.at2d(j, i);
 			auto srcImg = img.at2d_linear(srcY, srcX);
-			//auto srcImg = img.at2d_linear(j, i);
+
+			if (j==0 and i==0) {
+				cout << srcX << ", " << srcY << endl;
+			} else if (j == imgTest.height-1 and i == imgTest.width-1) {
+				cout << srcX << ", " << srcY << endl;
+			}
 
 			for (size_t rgb = 0; rgb < img.bits>>3; rgb++) {
 				dstImg[rgb] = srcImg[rgb];
@@ -69,6 +78,47 @@ int main(int argc, char const *argv[]) {
 		}
 	}
 	t0.print("bilinear");
+
+	img=imgTest;
+
+	ratio=2;
+	imgTest.resize(img.width*ratio, img.height*ratio, img.bits);
+
+	cout << "放大" << endl;
+	t0.start();
+#pragma omp parallel for
+	for (int j = 0; j < imgTest.height; j++) {
+		for (int i = 0; i < imgTest.width; i++) {
+			double ratio = (double)imgTest.width/img.width;
+			float srcY=0, srcX=0;
+			if (ratio >= 1) {
+				srcX = (i / ((double)(imgTest.width -1.0)/(img.width -1.0)));
+				srcY = (j / ((double)(imgTest.height-1.0)/(img.height-1.0)));
+			} else if (ratio < 1) {
+				//srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
+				//srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
+				srcX = i * ((img.width +1.0)/imgTest.width );
+				srcY = j * ((img.height+1.0)/imgTest.height);
+			}
+			auto dstImg = imgTest.at2d(j, i);
+			auto srcImg = img.at2d_linear(srcY, srcX);
+
+			if (j==0 and i==0) {
+				cout << srcX << ", " << srcY << endl;
+			} else if (j == imgTest.height-1 and i == imgTest.width-1) {
+				cout << srcX << ", " << srcY << endl;
+			}
+
+			for (size_t rgb = 0; rgb < img.bits>>3; rgb++) {
+				dstImg[rgb] = srcImg[rgb];
+			}
+		}
+	}
+	t0.print("bilinear");
+
+
+
+
 	imgTest.bmp("ImgOutput/out_test.bmp");
 
 	// 大小相符
