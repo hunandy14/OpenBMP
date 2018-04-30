@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char const *argv[]) {
 	ImgData img("ImgInput/test.bmp");
 	//img.convertGray();
-	img.bmp("ImgOutput/out_test.bmp");
+	//img.bmp("ImgOutput/out_test.bmp");
 
 	// 下標測試
 	/*ImgData imgTest=img;
@@ -38,24 +38,44 @@ int main(int argc, char const *argv[]) {
 	snip.bmp("ImgOutput/out_test.bmp");*/
 
 	// 線性插補
+	//ImgData imgTest(960, 540, 8);
 	ImgData imgTest;
-	for (size_t j = 0; j < imgTest.height; j++) {
-		for (size_t i = 0; i < imgTest.width; i++) {
+	imgTest.resize(img);
+	//imgTest.resize(960, 540, img.bits);
+
+	Timer t0;
+//#pragma omp parallel for
+	for (int j = 0; j < imgTest.height; j++) {
+		for (int i = 0; i < imgTest.width; i++) {
+			double ratio = (double)imgTest.width/img.width;
+			float srcY=0, srcX=0;
+			if (ratio >= 1) {
+				srcX = ( i / ((imgTest.width -1.0)/(img.width -1.0)) );
+				srcY = ( j / ((imgTest.height-1.0)/(img.height-1.0)) );
+			} else if (ratio < 1) {
+				srcX = (i+0.5) * ((double)img.width /imgTest.width ) - 0.5;
+				srcY = (j+0.5) * ((double)img.height/imgTest.height) - 0.5;
+			}
+
+			//cout << srcX << ", " << srcY << endl;
+
 			auto dstImg = imgTest.at2d(j, i);
-			//auto srcImg = imgTest.biliner(j, i);
+			auto srcImg = img.at2d_linear(srcY, srcX);
+			//auto srcImg = img.at2d_linear(j, i);
+
 			for (size_t rgb = 0; rgb < img.bits>>3; rgb++) {
-				//dstImg[rgb] = img.biliner(j, i);
+				dstImg[rgb] = srcImg[rgb];
 			}
 		}
 	}
-
+	t0.print("bilinear");
+	imgTest.bmp("ImgOutput/out_test.bmp");
 
 	// 大小相符
 	/*ImgData imgTest;
 	cout << "imgTest==img " << (imgTest==img) << endl;
 	imgTest.resize(img);
 	cout << "imgTest==img " << (imgTest==img) << endl;*/
-
 
 	/*// 資料結構
 	vector<unsigned char> raw_img;
