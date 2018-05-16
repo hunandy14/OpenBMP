@@ -139,7 +139,9 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 int main(int argc, char const *argv[]) {
 	ImgData img("ImgInput/test.bmp");
 	//img.convertGray();
-	//img.bmp("ImgOutput/out_test.bmp");
+
+	ImgData gray=img.toConvertGray();
+	gray.bmp("ImgOutput/out_test.bmp");
 
 	// ¤U¼Ð´ú¸Õ
 	/*ImgData imgTest=img;

@@ -265,14 +265,21 @@ public: // ¦Û­q¤èªk
 		OpenBMP::bmpWrite(name, raw_img, width, height, bits);
 	}
 	ImgData& convertGray() {
-		OpenBMP::raw2gray(raw_img, raw_img);
-		bits = 8;
+		if (bits == 24) {
+			OpenBMP::raw2gray(raw_img, raw_img);
+			bits = 8;
+		}
 		return *this;
 	}
 	ImgData toConvertGray() const {
 		ImgData img;
-		OpenBMP::raw2gray(img.raw_img, raw_img);
-		img.bits = 8;
+		img.resize(*this);
+		if (bits == 24) {
+			OpenBMP::raw2gray(img.raw_img, raw_img);
+			img.bits = 8;
+		} else {
+			img = *this;
+		}
 		return img;
 	}
 	ImgData toSnip (uint32_t width, uint32_t height, uint32_t y=0, uint32_t x=0) const {
