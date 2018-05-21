@@ -7,7 +7,7 @@ Final: 2018/04/18
 #include <iostream>
 #include <vector>
 #include "Timer.hpp"
-#include "OpenBMP\OpenBMP.hpp"
+#include "OpenBMP/OpenBMP.hpp"
 using namespace std;
 
 

@@ -204,7 +204,7 @@ public: // 存取方法
 		return &raw_img[(y*width + x) *(bits>>3)];
 	}
 	// 線性插值(快速測試用, RGB效率很差)
-	auto at2d_linear(double y, double x) const { 
+	std::vector<double> at2d_linear(double y, double x) const { 
 		std::vector<double> RGB(bits>>3);
 		// 整數就不算了
 		if (y==(int)y and x==(int)x) {
