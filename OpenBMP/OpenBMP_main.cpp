@@ -6,7 +6,7 @@ Final: 2018/04/18
 *****************************************************************/
 #include <iostream>
 #include <vector>
-#include <Timer.hpp>
+#include "Timer.hpp"
 #include "OpenBMP\OpenBMP.hpp"
 using namespace std;
 
@@ -88,7 +88,7 @@ void WarpScale(const basic_ImgData &src, basic_ImgData &dst, double Ratio){
 	}
 }
 
-void bilinear(const ImgData& src, ImgData& dst, double ratio) {
+void fast_bilinear(const ImgData& src, ImgData& dst, double ratio) {
 	//Timer t0;
 	//t0.start();
 
@@ -123,9 +123,9 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 
 			// 測試縮放有無正常用
 			if (j<=0 and i<=2) {
-				cout << srcX << ", " << srcY << endl;
+				//cout << srcX << ", " << srcY << endl;
 			} else if (j == dst.height-1 and i == dst.width-1) {
-				cout << srcX << ", " << srcY << endl;
+				//cout << srcX << ", " << srcY << endl;
 			}
 
 			for (size_t rgb = 0; rgb < src.bits>>3; rgb++) {
@@ -137,17 +137,21 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 }
 //================================================================
 int main(int argc, char const *argv[]) {
-	ImgData img("ImgInput/test.bmp");
-	//img.convertGray();
+	Timer t0;
 
+	// 讀圖
+	ImgData img("ImgInput/test.bmp");
+	
+	// 轉灰階 (2種方法)
+	/*img.convertGray();
+	img.bmp("ImgOutput/out_test.bmp");
 	ImgData gray=img.toConvertGray();
-	gray.bmp("ImgOutput/out_test.bmp");
+	gray.bmp("ImgOutput/out_test.bmp");*/
 
 	// 下標測試
 	/*ImgData imgTest=img;
-	for (size_t i = 0; i < imgTest.size(); i++) {
+	for (size_t i = 0; i < imgTest.size(); i++)
 		imgTest[i]=128;
-	}
 	imgTest.bmp("ImgOutput/out_test.bmp");*/
 
 	// at2d() 測試
@@ -162,41 +166,44 @@ int main(int argc, char const *argv[]) {
 	imgTest.bmp("ImgOutput/out_test.bmp");*/
 
 	// 擷取測試
-	/*ImgData snip=img.toSnip(500, 500, 00, 100);
-	snip.bmp("ImgOutput/out_test.bmp");*/
+	ImgData snip=img.toSnip(500, 500, 00, 100);
+	snip.bmp("ImgOutput/out_test.bmp");
 
-	// 線性插補測試
+	// 連續線性插補測試
 	ImgData imgTest1,imgTest2, temp1, temp2, temp;
-	double ratio=2;
-	bilinear(img, imgTest1, 4);
-	/*bilinear(imgTest1, imgTest2, 2.0);
-	bilinear(imgTest2, imgTest1, 0.5);
-	bilinear(imgTest1, imgTest2, 2.0);
-	bilinear(imgTest2, imgTest1, 0.5);
-	bilinear(imgTest1, imgTest2, 2.0);*/
-	//imgTest1.bmp("ImgOutput/out_test.bmp");
-
-	Timer t0;
 	t0.start();
-	bilinear(img, temp, 0.5);
-	bilinear(temp, imgTest1, 2);
+	fast_bilinear(img, imgTest1, 0.5);
+	fast_bilinear(imgTest1, imgTest2, 2.0);
+	/*fast_bilinear(imgTest2, imgTest1, 0.5);
+	fast_bilinear(imgTest1, imgTest2, 2.0);
+	fast_bilinear(imgTest2, imgTest1, 0.5);
+	fast_bilinear(imgTest1, imgTest2, 2.0);*/
+	t0.print("連續插補時間");
+	imgTest2.bmp("ImgOutput/out_test.bmp");
+
+	// 快速插補測試
+	/*t0.start();
+	fast_bilinear(img, temp, 0.5);
+	fast_bilinear(temp, imgTest1, 2);
 	t0.print("t1");
-	imgTest1.bmp("ImgOutput/out_test1.bmp");
+	imgTest1.bmp("ImgOutput/out_test1.bmp");*/
 
-	t0.start();
+	// 一般插補測試
+	/*t0.start();
 	WarpScale(temp, imgTest2, 2);
 	WarpScale(img, temp, 0.5);
 	t0.print("t2");
 	temp.bmp("ImgOutput/out_test2.bmp");
-	imgTest2.bmp("ImgOutput/out_test22.bmp");
+	imgTest2.bmp("ImgOutput/out_test22.bmp");*/
 
-	cout << endl;
 	// 大小相符
 	/*ImgData imgTest;
 	cout << "imgTest==img " << (imgTest==img) << endl;
 	imgTest.resize(img);
 	cout << "imgTest==img " << (imgTest==img) << endl;*/
 
+
+	// 基礎方法使用範例
 	/*// 資料結構
 	vector<unsigned char> raw_img;
 	uint32_t width, height;
@@ -209,7 +216,6 @@ int main(int argc, char const *argv[]) {
 	// 轉灰階
 	OpenBMP::raw2gray(raw_img, raw_img);
 	OpenBMP::bmpWrite("ImgOutput/out_test_gray.bmp", raw_img, width, height, 8);*/
-
 	return 0;
 }
 //================================================================
