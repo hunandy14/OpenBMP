@@ -140,19 +140,31 @@ int main(int argc, char const *argv[]) {
 	Timer t0;
 
 	// 讀圖
-	ImgData img("ImgInput/test.bmp");
-	
-	// 轉灰階 (2種方法)
-	/*img.convertGray();
-	img.bmp("ImgOutput/out_test.bmp");
-	ImgData gray=img.toConvertGray();
-	gray.bmp("ImgOutput/out_test.bmp");*/
+	//const ImgData img("ImgInput/test.bmp");
+	const ImgData img("ImgInput/lena.bmp");
+
+	// 圖片基本資訊
+	cout << "img size = " << img.size() << endl;
+	cout << "img width = " << img.width << endl;
+	cout << "img heigh = " << img.height << endl;
+	cout << "img bits = " << img.bits << endl;
+	cout << "img point value = " << (int)img[0] << endl;
 
 	// 下標測試
-	/*ImgData imgTest=img;
-	for (size_t i = 0; i < imgTest.size(); i++)
-		imgTest[i]=128;
-	imgTest.bmp("ImgOutput/out_test.bmp");*/
+	ImgData imgTest=img.toConvertGray();
+	for (size_t i = 0; i < imgTest.size()/2; i++) {
+		imgTest[i]=255;
+	} imgTest.bmp("ImgOutput/out_test.bmp");
+
+	// 轉灰階1 (會改變自己)
+	/*ImgData grayImg1=img;
+	grayImg1.convertGray();
+	grayImg1.bmp("ImgOutput/grayImg1.bmp");*/
+
+	// 轉灰階2 (不會改變自己)
+	/*ImgData grayImg2;
+	grayImg2 = img.toConvertGray();
+	grayImg2.bmp("ImgOutput/grayImg2.bmp");*/
 
 	// at2d() 測試
 	/*ImgData imgTest;
@@ -162,24 +174,23 @@ int main(int argc, char const *argv[]) {
 			auto p = imgTest.at2d(j, i);
 			p[0]=128; p[1]=128; p[2]=128;
 		}
-	}
-	imgTest.bmp("ImgOutput/out_test.bmp");*/
+	} imgTest.bmp("ImgOutput/out_test.bmp");*/
 
 	// 擷取測試
-	ImgData snip=img.toSnip(500, 500, 00, 100);
-	snip.bmp("ImgOutput/out_test.bmp");
+	/*ImgData snip=img.toSnip(500, 500, 00, 100);
+	snip.bmp("ImgOutput/out_test.bmp");*/
 
 	// 連續線性插補測試
-	ImgData imgTest1,imgTest2, temp1, temp2, temp;
+	/*ImgData imgTest1,imgTest2, temp1, temp2, temp;
 	t0.start();
 	fast_bilinear(img, imgTest1, 0.5);
 	fast_bilinear(imgTest1, imgTest2, 2.0);
-	/*fast_bilinear(imgTest2, imgTest1, 0.5);
+	fast_bilinear(imgTest2, imgTest1, 0.5);
 	fast_bilinear(imgTest1, imgTest2, 2.0);
 	fast_bilinear(imgTest2, imgTest1, 0.5);
-	fast_bilinear(imgTest1, imgTest2, 2.0);*/
+	fast_bilinear(imgTest1, imgTest2, 2.0);
 	t0.print("連續插補時間");
-	imgTest2.bmp("ImgOutput/out_test.bmp");
+	imgTest2.bmp("ImgOutput/out_test.bmp");*/
 
 	// 快速插補測試
 	/*t0.start();
