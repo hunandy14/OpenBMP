@@ -10,8 +10,7 @@ Final: 2018/04/18
 #include "OpenBMP/OpenBMP.hpp"
 using namespace std;
 
-
-// 快速 線性插值
+// 快速線性插值_核心
 inline static void fast_Bilinear_rgb(unsigned char* p, 
 	const basic_ImgData& src, double y, double x)
 {
@@ -43,18 +42,20 @@ inline static void fast_Bilinear_rgb(unsigned char* p,
 	G += (double)src.raw_img[(y2 * srcW + x2) *3 + 1] * (l_x * t_y);
 	B += (double)src.raw_img[(y2 * srcW + x2) *3 + 2] * (l_x * t_y);
 
-	*(p+0) = (unsigned char) R;
-	*(p+1) = (unsigned char) G;
-	*(p+2) = (unsigned char) B;
+	p[0] = (unsigned char) R;
+	p[1] = (unsigned char) G;
+	p[2] = (unsigned char) B;
 }
-void WarpScale(const basic_ImgData &src, basic_ImgData &dst, double Ratio){
-	int newH = (int)((src.height * Ratio) +0.5);
-	int newW = (int)((src.width  * Ratio) +0.5);
+// 快速線性插值
+void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio){
+	// 防呆
+	if (src.bits != 24) runtime_error("IMG is not 24bit.");
 	// 初始化 dst
-	dst.raw_img.resize(newW * newH * src.bits/8.0);
-	dst.width  = newW;
-	dst.height = newH;
+	dst.width  = (int)((src.width  * ratio) +0.5);
+	dst.height = (int)((src.height * ratio) +0.5);
 	dst.bits   = src.bits;
+	dst.raw_img.resize(dst.width * dst.height * dst.bits>>3);
+
 	// 縮小的倍率
 	double r1W = ((double)src.width )/(dst.width );
 	double r1H = ((double)src.height)/(dst.height);
@@ -64,36 +65,38 @@ void WarpScale(const basic_ImgData &src, basic_ImgData &dst, double Ratio){
 	// 縮小時候的誤差
 	double deviW = ((src.width-1.0)  - (dst.width -1.0)*(r1W)) /dst.width;
 	double deviH = ((src.height-1.0) - (dst.height-1.0)*(r1H)) /dst.height;
+
 	// 跑新圖座標
 #pragma omp parallel for
-	for (int j = 0; j < newH; ++j) {
-		for (int i = 0; i < newW; ++i) {
+	for (int j = 0; j < dst.height; ++j) {
+		for (int i = 0; i < dst.width; ++i) {
 			// 調整對齊
 			double srcY, srcX;
-			if (Ratio < 1.0) {
-				/*srcX = (i+0.5) * ((double)src.width /dst.width ) - 0.5;
-				srcY = (j+0.5) * ((double)src.height/dst.height) - 0.5;*/
+			if (ratio < 1.0) {
+				//srcY = ((j+0.5f)/Ratio) - 0.5;
+				//srcX = ((i+0.5f)/Ratio) - 0.5;
 				srcX = i*(r1W+deviW);
 				srcY = j*(r1H+deviH);
-			} else if (Ratio >= 1.0) {
+			} else if (ratio >= 1.0) {
 				srcX = i*r2W;
 				srcY = j*r2H;
 			}
+
 			// 獲取插補值
-			unsigned char* p = &dst.raw_img[(j*newW + i) *3];
-			if (Ratio>1) {
+			unsigned char* p = &dst.raw_img[(j*dst.width + i) *3];
+			if (ratio>1) {
+				fast_Bilinear_rgb(p, src, srcY, srcX);
+			} else {
 				fast_Bilinear_rgb(p, src, srcY, srcX);
 			}
 		}
 	}
 }
 
-void fast_bilinear(const ImgData& src, ImgData& dst, double ratio) {
-	//Timer t0;
-	//t0.start();
-
+// 一般線性插補
+void bilinear(const ImgData& src, ImgData& dst, double ratio) {
+	// 重設置目標圖像大小
 	dst.resize(src.width*ratio, src.height*ratio, src.bits);
-
 	// 縮小的倍率
 	double r1W = ((double)src.width )/(dst.width );
 	double r1H = ((double)src.height)/(dst.height);
@@ -107,11 +110,9 @@ void fast_bilinear(const ImgData& src, ImgData& dst, double ratio) {
 #pragma omp parallel for
 	for (int j = 0; j < dst.height; j++) {
 		for (int i = 0; i < dst.width; i++) {
-			double ratio = (double)dst.width/src.width;
 			double srcY=0, srcX=0;
+			// 調整對齊
 			if (ratio < 1.0) {
-				/*srcX = (i+0.5) * ((double)src.width /dst.width ) - 0.5;
-				srcY = (j+0.5) * ((double)src.height/dst.height) - 0.5;*/
 				srcX = i*(r1W+deviW);
 				srcY = j*(r1H+deviH);
 			} else if (ratio >= 1.0) {
@@ -120,14 +121,6 @@ void fast_bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			}
 			auto dstImg = dst.at2d(j, i);
 			auto srcImg = src.at2d_linear(srcY, srcX);
-
-			// 測試縮放有無正常用
-			if (j<=0 and i<=2) {
-				//cout << srcX << ", " << srcY << endl;
-			} else if (j == dst.height-1 and i == dst.width-1) {
-				//cout << srcX << ", " << srcY << endl;
-			}
-
 			for (size_t rgb = 0; rgb < src.bits>>3; rgb++) {
 				dstImg[rgb] = srcImg[rgb];
 			}
@@ -138,23 +131,21 @@ void fast_bilinear(const ImgData& src, ImgData& dst, double ratio) {
 //================================================================
 int main(int argc, char const *argv[]) {
 	Timer t0;
+	ImgData imgTest1,imgTest2, temp1, temp2, temp, imgOut;
 
 	// 讀圖
-	//const ImgData img("ImgInput/test.bmp");
-	const ImgData img("ImgInput/lena.bmp");
-
+	const ImgData img("ImgInput/test.bmp");
 	// 圖片基本資訊
-	cout << "img size = " << img.size() << endl;
-	cout << "img width = " << img.width << endl;
-	cout << "img heigh = " << img.height << endl;
-	cout << "img bits = " << img.bits << endl;
+	img.info_print();
 	cout << "img point value = " << (int)img[0] << endl;
+	// 輸出
+	img.bmp("ImgOutput/test_orig.bmp");
 
 	// 下標測試
-	ImgData imgTest=img.toConvertGray();
+	/*ImgData imgTest=img.toConvertGray();
 	for (size_t i = 0; i < imgTest.size()/2; i++) {
 		imgTest[i]=255;
-	} imgTest.bmp("ImgOutput/out_test.bmp");
+	} imgTest.bmp("ImgOutput/out_test.bmp");*/
 
 	// 轉灰階1 (會改變自己)
 	/*ImgData grayImg1=img;
@@ -180,24 +171,33 @@ int main(int argc, char const *argv[]) {
 	/*ImgData snip=img.toSnip(500, 500, 00, 100);
 	snip.bmp("ImgOutput/out_test.bmp");*/
 
-	// 連續線性插補測試
-	/*ImgData imgTest1,imgTest2, temp1, temp2, temp;
-	t0.start();
-	fast_bilinear(img, imgTest1, 0.5);
-	fast_bilinear(imgTest1, imgTest2, 2.0);
-	fast_bilinear(imgTest2, imgTest1, 0.5);
-	fast_bilinear(imgTest1, imgTest2, 2.0);
-	fast_bilinear(imgTest2, imgTest1, 0.5);
-	fast_bilinear(imgTest1, imgTest2, 2.0);
-	t0.print("連續插補時間");
-	imgTest2.bmp("ImgOutput/out_test.bmp");*/
 
-	// 快速插補測試
-	/*t0.start();
-	fast_bilinear(img, temp, 0.5);
-	fast_bilinear(temp, imgTest1, 2);
-	t0.print("t1");
-	imgTest1.bmp("ImgOutput/out_test1.bmp");*/
+
+	// 連續線性插補測試
+	int testCount=2;
+	t0.start();
+	bilinear(img, imgTest1, 0.5);
+	for (size_t i = 0; i < testCount; i++) {
+		ImgData temp;
+		bilinear(imgTest1, temp, 2.0);
+		bilinear(temp, imgTest1, 0.5);
+	}
+	bilinear(imgTest1, imgOut, 2.0);
+	t0.print("BASIC bilinear time");
+	imgOut.bmp("ImgOutput/out_test1.bmp");
+	// 快速線性插補測試
+	t0.start();
+	WarpScale_rgb(img, imgTest1, 0.5);
+	for (size_t i = 0; i < testCount; i++) {
+		ImgData temp;
+		WarpScale_rgb(imgTest1, temp, 2.0);
+		WarpScale_rgb(temp, imgTest1, 0.5);
+	}
+	WarpScale_rgb(imgTest1, imgOut, 2.0);
+	t0.print("FAST  bilinear time");
+	imgOut.bmp("ImgOutput/out_test2.bmp");
+
+
 
 	// 一般插補測試
 	/*t0.start();

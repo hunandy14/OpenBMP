@@ -259,6 +259,13 @@ public: // 大小方法
 	void resize(const ImgData& src) {
 		resize(src.width, src.height, src.bits);
 	}
+	void info_print() const {
+		std::cout << ">>IMG basic info:" << "\n";
+		std::cout << "  - img size  = " << this->size() << "\n";
+		std::cout << "  - img width = " << this->width  << "\n";
+		std::cout << "  - img heigh = " << this->height << "\n";
+		std::cout << "  - img bits  = " << this->bits   << "\n\n";
+	}
 
 public: // 自訂方法
 	void bmp(std::string name) const {
