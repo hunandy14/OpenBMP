@@ -10,8 +10,112 @@ Final: 2018/04/18
 #include "OpenBMP/OpenBMP.hpp"
 using namespace std;
 
+void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio);
+void bilinear(const ImgData & src, ImgData & dst, double ratio);
+
+//================================================================
+int main(int argc, char const *argv[]) {
+	Timer t0;
+	ImgData imgTest1, imgOut;
+
+
+	// 讀圖
+	const ImgData img("ImgInput/test.bmp");
+	// 圖片基本資訊
+	img.info_print();
+	// 輸出
+	img.bmp("ImgOutput/test_orig.bmp");
+
+
+
+	// 改變半張圖範例
+	/*imgOut = img.toConvertGray();
+	for (size_t i = 0; i < imgOut.size()/2; i++) {
+		imgOut[i]=255;
+	} imgOut.bmp("ImgOutput/out_test.bmp");*/
+
+
+
+	// 轉灰階1 (會改變自己)
+	/*imgOut = img;
+	imgOut.convertGray();
+	imgOut.bmp("ImgOutput/out_test-gray1.bmp");
+	// 轉灰階2 (不會改變自己)
+	imgOut = img.toConvertGray();
+	imgOut.bmp("ImgOutput/out_test-gray2.bmp");*/
+
+
+
+	// at2d() 測試
+	/*imgOut.resize(100, 100, 24);
+	for (size_t j = 0; j < imgOut.height; j++) {
+		for (size_t i = 0; i < imgOut.width; i++) {
+			auto p = imgOut.at2d(j, i);
+			p[0]=128; p[1]=128; p[2]=128;
+		}
+	} imgOut.bmp("ImgOutput/out_test-at2d.bmp");*/
+
+
+
+	// 擷取測試
+	/*imgOut = img.toSnip(500, 500, 00, 100);
+	imgOut.bmp("ImgOutput/out_test-toSnip.bmp");*/
+
+
+
+	// 連續線性插補測試
+	/*int testCount=0;
+	t0.start();
+	bilinear(img, imgTest1, 0.5);
+	for (size_t i = 0; i < testCount; i++) {
+		ImgData temp;
+		bilinear(imgTest1, temp, 2.0);
+		bilinear(temp, imgTest1, 0.5);
+	}
+	bilinear(imgTest1, imgOut, 2.0);
+	t0.print("BASIC bilinear time");
+	imgOut.bmp("ImgOutput/out_test1.bmp");*/
+	// 快速線性插補測試
+	/*t0.start();
+	WarpScale_rgb(img, imgTest1, 0.5);
+	for (size_t i = 0; i < testCount; i++) {
+		ImgData temp;
+		WarpScale_rgb(imgTest1, temp, 2.0);
+		WarpScale_rgb(temp, imgTest1, 0.5);
+	}
+	WarpScale_rgb(imgTest1, imgOut, 2.0);
+	t0.print("FAST  bilinear time");
+	imgOut.bmp("ImgOutput/out_test2.bmp");*/
+
+
+
+	// 大小相符
+	/*imgOut.clear();
+	cout << "imgTest == img? " << (imgOut==img) << endl;
+	imgOut.resize(img);
+	cout << "imgTest == img? " << (imgOut==img) << endl;*/
+
+
+
+	// 基礎方法使用範例
+	// 資料結構
+	/*vector<unsigned char> raw_img;
+	uint32_t width, height;
+	uint16_t bits;
+	// 讀寫 Bmp 
+	OpenBMP::bmpRead(raw_img, "ImgInput/test.bmp", &width, &height, &bits);
+	OpenBMP::bmpWrite("ImgOutput/out_test.bmp", raw_img, width, height, bits);
+	// 寫 raw 檔案
+	OpenBMP::rawWrite("ImgOutput/test.raw", raw_img);
+	// 轉灰階
+	OpenBMP::raw2gray(raw_img, raw_img);
+	OpenBMP::bmpWrite("ImgOutput/out_test_gray.bmp", raw_img, width, height, 8);*/
+	return 0;
+}
+//================================================================
+
 // 快速線性插值_核心
-inline static void fast_Bilinear_rgb(unsigned char* p, 
+static void fast_Bilinear_rgb(unsigned char* p, 
 	const basic_ImgData& src, double y, double x)
 {
 	// 起點
@@ -92,7 +196,6 @@ void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio){
 		}
 	}
 }
-
 // 一般線性插補
 void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 	// 重設置目標圖像大小
@@ -126,107 +229,4 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			}
 		}
 	}
-	//t0.print("bilinear");
 }
-//================================================================
-int main(int argc, char const *argv[]) {
-	Timer t0;
-	ImgData imgTest1,imgTest2, temp1, temp2, temp, imgOut;
-
-	// 讀圖
-	const ImgData img("ImgInput/test.bmp");
-	// 圖片基本資訊
-	img.info_print();
-	cout << "img point value = " << (int)img[0] << endl;
-	// 輸出
-	img.bmp("ImgOutput/test_orig.bmp");
-
-	// 下標測試
-	/*ImgData imgTest=img.toConvertGray();
-	for (size_t i = 0; i < imgTest.size()/2; i++) {
-		imgTest[i]=255;
-	} imgTest.bmp("ImgOutput/out_test.bmp");*/
-
-	// 轉灰階1 (會改變自己)
-	/*ImgData grayImg1=img;
-	grayImg1.convertGray();
-	grayImg1.bmp("ImgOutput/grayImg1.bmp");*/
-
-	// 轉灰階2 (不會改變自己)
-	/*ImgData grayImg2;
-	grayImg2 = img.toConvertGray();
-	grayImg2.bmp("ImgOutput/grayImg2.bmp");*/
-
-	// at2d() 測試
-	/*ImgData imgTest;
-	imgTest.resize(100, 100, 24);
-	for (size_t j = 0; j < imgTest.height; j++) {
-		for (size_t i = 0; i < imgTest.width; i++) {
-			auto p = imgTest.at2d(j, i);
-			p[0]=128; p[1]=128; p[2]=128;
-		}
-	} imgTest.bmp("ImgOutput/out_test.bmp");*/
-
-	// 擷取測試
-	/*ImgData snip=img.toSnip(500, 500, 00, 100);
-	snip.bmp("ImgOutput/out_test.bmp");*/
-
-
-
-	// 連續線性插補測試
-	int testCount=2;
-	t0.start();
-	bilinear(img, imgTest1, 0.5);
-	for (size_t i = 0; i < testCount; i++) {
-		ImgData temp;
-		bilinear(imgTest1, temp, 2.0);
-		bilinear(temp, imgTest1, 0.5);
-	}
-	bilinear(imgTest1, imgOut, 2.0);
-	t0.print("BASIC bilinear time");
-	imgOut.bmp("ImgOutput/out_test1.bmp");
-	// 快速線性插補測試
-	t0.start();
-	WarpScale_rgb(img, imgTest1, 0.5);
-	for (size_t i = 0; i < testCount; i++) {
-		ImgData temp;
-		WarpScale_rgb(imgTest1, temp, 2.0);
-		WarpScale_rgb(temp, imgTest1, 0.5);
-	}
-	WarpScale_rgb(imgTest1, imgOut, 2.0);
-	t0.print("FAST  bilinear time");
-	imgOut.bmp("ImgOutput/out_test2.bmp");
-
-
-
-	// 一般插補測試
-	/*t0.start();
-	WarpScale(temp, imgTest2, 2);
-	WarpScale(img, temp, 0.5);
-	t0.print("t2");
-	temp.bmp("ImgOutput/out_test2.bmp");
-	imgTest2.bmp("ImgOutput/out_test22.bmp");*/
-
-	// 大小相符
-	/*ImgData imgTest;
-	cout << "imgTest==img " << (imgTest==img) << endl;
-	imgTest.resize(img);
-	cout << "imgTest==img " << (imgTest==img) << endl;*/
-
-
-	// 基礎方法使用範例
-	/*// 資料結構
-	vector<unsigned char> raw_img;
-	uint32_t width, height;
-	uint16_t bits;
-	// 讀寫 Bmp 
-	OpenBMP::bmpRead(raw_img, "ImgInput/test.bmp", &width, &height, &bits);
-	OpenBMP::bmpWrite("ImgOutput/out_test.bmp", raw_img, width, height, bits);
-	// 寫 raw 檔案
-	OpenBMP::rawWrite("ImgOutput/test.raw", raw_img);
-	// 轉灰階
-	OpenBMP::raw2gray(raw_img, raw_img);
-	OpenBMP::bmpWrite("ImgOutput/out_test_gray.bmp", raw_img, width, height, 8);*/
-	return 0;
-}
-//================================================================

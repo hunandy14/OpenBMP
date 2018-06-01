@@ -259,6 +259,12 @@ public: // 大小方法
 	void resize(const ImgData& src) {
 		resize(src.width, src.height, src.bits);
 	}
+	void clear() {
+		raw_img.clear();
+		this->width  = 0;
+		this->height = 0;
+		this->bits   = 0;
+	}
 	void info_print() const {
 		std::cout << ">>IMG basic info:" << "\n";
 		std::cout << "  - img size  = " << this->size() << "\n";
