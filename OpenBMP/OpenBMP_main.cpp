@@ -1,8 +1,8 @@
 /*****************************************************************
-Name : OpenBMP
+Name : OpenBMP Version 1.0.1
 Date : 2017/06/11
 By   : CharlotteHonG
-Final: 2018/04/18
+Final: 2018/06/01
 *****************************************************************/
 #include <iostream>
 #include <vector>

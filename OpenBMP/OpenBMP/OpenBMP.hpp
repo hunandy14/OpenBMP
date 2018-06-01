@@ -1,22 +1,8 @@
 /*****************************************************************
-Name :
+Name : OpenBMP
 Date : 2017/06/12
 By   : CharlotteHonG
-Final: 2018/04/18
-
-使用說明：
-// 資料結構
-vector<unsigned char> raw_img;
-uint32_t width, height;
-uint16_t bits;
-// 讀寫 Bmp 
-OpenBMP::bmpRead(raw_img, "ImgInput/kanna.bmp", &width, &height, &bits);
-OpenBMP::bmpWrite("ImgOutput/out_kanna.bmp", raw_img, width, height, bits);
-// 寫 raw 檔案
-OpenBMP::rawWrite("ImgOutput/kanna.raw", raw_img);
-// 轉灰階
-OpenBMP::raw2gray(raw_img, raw_img);
-OpenBMP::bmpWrite("ImgOutput/out_kanna_gray.bmp", raw_img, width, height, 8);
+Final: 2018/06/01
 *****************************************************************/
 #pragma once
 #include <fstream>
