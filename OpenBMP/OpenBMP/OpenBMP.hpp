@@ -193,7 +193,7 @@ public: // 存取方法
 	std::vector<double> at2d_linear(double y, double x) const { 
 		std::vector<double> RGB(bits>>3);
 		// 整數就不算了
-		if (y==(int)y and x==(int)x) {
+		if (y==(int)y && x==(int)x) {
 			auto p = this->at2d(y, x);
 			for (int i = 0; i < RGB.size(); i++)
 				RGB[i] = static_cast<double>(p[i]);
@@ -283,7 +283,7 @@ public: // 自訂方法
 	}
 	ImgData toSnip (uint32_t width, uint32_t height, uint32_t y=0, uint32_t x=0) const {
 		// 檢查超過邊界
-		if (width+x > this->width or height+y > this->height)
+		if (width+x > this->width || height+y > this->height)
 			throw std::out_of_range("toSnip() out of range");
 		// 開始擷取
 		ImgData img(width, height, this->bits);
