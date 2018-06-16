@@ -147,7 +147,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="OpenBMP\OpenBMP.cpp" />
     <ClCompile Include="OpenBMP_main.cpp" />
   </ItemGroup>
   <ItemGroup>

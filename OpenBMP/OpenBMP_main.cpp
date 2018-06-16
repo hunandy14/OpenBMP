@@ -62,9 +62,16 @@ int main(int argc, char const *argv[]) {
 	imgOut.bmp("ImgOutput/out_test-toSnip.bmp");*/
 
 
+	// 插補測試
+	/*t0.start();
+	WarpScale_rgb(img, imgOut, 5);
+	//bilinear(img, imgOut, 5);
+	t0.print("BASIC bilinear time");
+	imgOut.bmp("ImgOutput/out_test1.bmp");*/
+
 
 	// 連續線性插補測試
-	/*int testCount=0;
+	/*int testCount=3;
 	t0.start();
 	bilinear(img, imgTest1, 0.5);
 	for (size_t i = 0; i < testCount; i++) {
@@ -74,9 +81,9 @@ int main(int argc, char const *argv[]) {
 	}
 	bilinear(imgTest1, imgOut, 2.0);
 	t0.print("BASIC bilinear time");
-	imgOut.bmp("ImgOutput/out_test1.bmp");*/
+	imgOut.bmp("ImgOutput/out_test1.bmp");
 	// 快速線性插補測試
-	/*t0.start();
+	t0.start();
 	WarpScale_rgb(img, imgTest1, 0.5);
 	for (size_t i = 0; i < testCount; i++) {
 		ImgData temp;

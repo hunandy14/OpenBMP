@@ -21,9 +21,6 @@
     <ClCompile Include="OpenBMP_main.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
-    <ClCompile Include="OpenBMP\OpenBMP.cpp">
-      <Filter>來源檔案\OpenBMP</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenBMP\OpenBMP.hpp">
