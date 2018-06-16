@@ -5,9 +5,8 @@ By   : CharlotteHonG
 Final: 2018/06/01
 *****************************************************************/
 #include <iostream>
-#include <vector>
-#include "Timer.hpp"
 #include "OpenBMP/OpenBMP.hpp"
+#include "Timer.hpp"
 using namespace std;
 
 void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio);

@@ -7,6 +7,7 @@ Final: 2018/06/01
 #pragma once
 #include <fstream>
 #include <vector>
+#include <string>
 
 //----------------------------------------------------------------
 // ¿…Æ◊¿…¿Y (BITMAPFILEHEADER)
