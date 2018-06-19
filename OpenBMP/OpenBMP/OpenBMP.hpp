@@ -9,6 +9,9 @@ Final: 2018/06/01
 #include <vector>
 #include <string>
 
+namespace OpenBMP {
+
+
 //----------------------------------------------------------------
 // 檔案檔頭 (BITMAPFILEHEADER)
 #pragma pack(2) // 調整對齊
@@ -437,3 +440,6 @@ public:
 public:
 	std::vector<float> nor_img;
 };
+
+
+} // namespace OpenBMP
