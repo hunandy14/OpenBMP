@@ -9,8 +9,6 @@ Final: 2018/06/01
 #include <vector>
 #include <string>
 
-namespace OpenBMP {
-
 
 //----------------------------------------------------------------
 // ¿…Æ◊¿…¿Y (BITMAPFILEHEADER)
@@ -261,6 +259,25 @@ struct basic_ImgData {
 	uint32_t height;
 	uint16_t bits;
 };
+inline void ImgData_resize(basic_ImgData &dst, int newW, int newH, int bits) {
+	dst.raw_img.resize(newW*newH*3);
+	dst.width = newW;
+	dst.height = newH;
+	dst.bits = bits;
+};
+inline void ImgData_resize(const basic_ImgData& src, basic_ImgData &dst) {
+	dst.raw_img.resize(src.width*src.height*3);
+	dst.width = src.width;
+	dst.height = src.height;
+	dst.bits = src.bits;
+};
+inline void ImgData_write(const basic_ImgData &src, std::string name) {
+	OpenBMP::bmpWrite(name, src.raw_img, src.width, src.height);
+};
+inline void ImgData_read(basic_ImgData &dst, std::string name) {
+	OpenBMP::bmpRead(dst.raw_img, name, &dst.width, &dst.height, &dst.bits);
+}
+
 
 
 class ImgData: public basic_ImgData {
@@ -441,5 +458,3 @@ public:
 	std::vector<float> nor_img;
 };
 
-
-} // namespace OpenBMP

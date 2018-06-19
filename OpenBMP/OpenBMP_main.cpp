@@ -8,7 +8,6 @@ Final: 2018/06/01
 #include "OpenBMP/OpenBMP.hpp"
 #include "Timer.hpp"
 using namespace std;
-using namespace OpenBMP;
 
 void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio);
 void bilinear(const ImgData & src, ImgData & dst, double ratio);
