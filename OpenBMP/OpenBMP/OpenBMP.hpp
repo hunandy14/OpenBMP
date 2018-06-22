@@ -127,14 +127,14 @@ public:
 	static void raw2gray(std::vector<uch>& dst, const std::vector<uch>& src) {
 		if (&dst == &src) {
 			// 同一個來源轉換完再resize
-			for (int i = 0; i < src.size()/3; ++i)
-				dst[i] = rgb2gray(&src[i*3]);
-			dst.resize(src.size()/3);
+			for (int i = 0; i < (int)(src.size()/3.0); ++i)
+				dst[i] = rgb2gray(&src[i*3.0]);
+			dst.resize(src.size()/3.0);
 		} else {
 			// 通常情況先設置好大小才轉換
-			dst.resize(src.size()/3);
-			for (int i = 0; i < src.size()/3; ++i)
-				dst[i] = rgb2gray(&src[i*3]);
+			dst.resize(src.size()/3.0);
+			for (int i = 0; i < (int)(src.size()/3.0); ++i)
+				dst[i] = rgb2gray(&src[i*3.0]);
 		}
 	}
 public:
@@ -321,7 +321,7 @@ public: // 存取方法
 		// 整數就不算了
 		if (y==y0 && x==x0) {
 			const uch* p = at2d(y0, x0);
-			for (int i = 0; i < RGB.size(); i++)
+			for (int i = 0; i < (int)RGB.size(); i++)
 				RGB[i] = static_cast<double>(p[i]);
 			return RGB;
 		}
@@ -335,7 +335,8 @@ public: // 存取方法
 		double dy1 = y -  y0;
 		double dy2 = 1 - dy1;
 		// 計算插值
-		for (int i = 0; i < RGB.size(); i++) {
+#pragma omp parallel for
+		for (int i = 0; i < (int)RGB.size(); i++) {
 			// 獲取點
 			const double& A = raw_img[(y0*width + x0)*(bits>>3) + i];
 			const double& B = raw_img[(y0*width + x1)*(bits>>3) + i];
@@ -414,9 +415,9 @@ public: // 自訂方法
 		ImgData img(width, height, this->bits);
 		for (uint32_t j = 0; j < img.height; j++) {
 			for (uint32_t i = 0; i < img.width; i++) {
-				auto srcIt = this->at2d(j+y, i+x);
-				auto dstIt = img.at2d(j, i);
-				for (size_t rgb = 0; rgb < bits>>3; rgb++) {
+				const uch* srcIt = this->at2d(j+y, i+x);
+				uch* dstIt = img.at2d(j, i);
+				for (uint16_t rgb = 0; rgb < bits>>3; rgb++) {
 					dstIt[rgb] = srcIt[rgb];
 				}
 			}
@@ -445,14 +446,14 @@ public:
 	void Normalization() {
 		nor_img.resize(raw_img.size());
 #pragma omp parallel for
-		for (int i = 0; i < nor_img.size(); i++) {
+		for (int i = 0; i < (int)nor_img.size(); i++) {
 			nor_img[i] = raw_img[i] /255.f;
 		}
 	}
 	void reNormalization() {
 		raw_img.resize(nor_img.size());
 #pragma omp parallel for
-		for (int i = 0; i < nor_img.size(); i++) {
+		for (int i = 0; i < (int)nor_img.size(); i++) {
 			raw_img[i] = (unsigned char)(nor_img[i] *255.f);
 		}
 	}

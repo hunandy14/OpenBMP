@@ -133,12 +133,11 @@ static void fast_Bilinear_rgb(unsigned char* p,
 	double t_y = y - (double)_y;
 	double b_y = 1.f - t_y;
 	int srcW = src.width;
-	int srcH = src.height;
 
 	// 計算RGB
 	double R , G, B;
-	int x2 = (_x+1) > (int)src.width -1? (int)src.width -1: _x+1;
-	int y2 = (_y+1) > (int)src.height-1? (int)src.height-1: _y+1;
+	int x2 = (_x+1) > (int)srcW-1? (int)srcW-1: _x+1;
+	int y2 = (_y+1) > (int)srcW-1? (int)srcW-1: _y+1;
 	R  = (double)src.raw_img[(_y * srcW + _x) *3 + 0] * (r_x * b_y);
 	G  = (double)src.raw_img[(_y * srcW + _x) *3 + 1] * (r_x * b_y);
 	B  = (double)src.raw_img[(_y * srcW + _x) *3 + 2] * (r_x * b_y);
@@ -181,7 +180,7 @@ void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio){
 	for (int j = 0; j < (int)dst.height; ++j) {
 		for (int i = 0; i < (int)dst.width; ++i) {
 			// 調整對齊
-			double srcY, srcX;
+			double srcY=0, srcX=0;
 			if (ratio < 1.0) {
 				//srcY = ((j+0.5f)/Ratio) - 0.5;
 				//srcX = ((i+0.5f)/Ratio) - 0.5;
@@ -230,7 +229,7 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			}
 			auto dstImg = dst.at2d(j, i);
 			auto srcImg = src.at2d_linear(srcY, srcX);
-			for (size_t rgb = 0; rgb < src.bits>>3; rgb++) {
+			for (uint16_t rgb = 0; rgb < src.bits>>3; rgb++) {
 				dstImg[rgb] = static_cast<unsigned char>(srcImg[rgb]);
 			}
 		}
