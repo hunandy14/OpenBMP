@@ -101,6 +101,15 @@ int main(int argc, char const *argv[]) {
 	imgOut.resize(img);
 	cout << "imgTest == img? " << (imgOut==img) << endl;*/
 
+	
+	
+	// 測試畫線函式
+	/*imgOut = ImgData("ImgInput/lena.bmp");
+	imgOut.convertRGB();
+	for (size_t i = 0; i < 36; i++) {
+		Draw::draw_arrowRGB(imgOut, 200, 200, 100.f*sqrt(2), i*10);
+	} imgOut.bmp("arrow.bmp");*/
+
 
 
 	// 基礎方法使用範例
