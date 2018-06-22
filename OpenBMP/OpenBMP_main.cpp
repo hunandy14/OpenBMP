@@ -137,8 +137,8 @@ static void fast_Bilinear_rgb(unsigned char* p,
 
 	// 計算RGB
 	double R , G, B;
-	int x2 = (_x+1) > src.width -1? src.width -1: _x+1;
-	int y2 = (_y+1) > src.height-1? src.height-1: _y+1;
+	int x2 = (_x+1) > (int)src.width -1? (int)src.width -1: _x+1;
+	int y2 = (_y+1) > (int)src.height-1? (int)src.height-1: _y+1;
 	R  = (double)src.raw_img[(_y * srcW + _x) *3 + 0] * (r_x * b_y);
 	G  = (double)src.raw_img[(_y * srcW + _x) *3 + 1] * (r_x * b_y);
 	B  = (double)src.raw_img[(_y * srcW + _x) *3 + 2] * (r_x * b_y);
@@ -178,8 +178,8 @@ void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio){
 
 	// 跑新圖座標
 #pragma omp parallel for
-	for (int j = 0; j < dst.height; ++j) {
-		for (int i = 0; i < dst.width; ++i) {
+	for (int j = 0; j < (int)dst.height; ++j) {
+		for (int i = 0; i < (int)dst.width; ++i) {
 			// 調整對齊
 			double srcY, srcX;
 			if (ratio < 1.0) {
@@ -205,7 +205,7 @@ void WarpScale_rgb(const basic_ImgData &src, basic_ImgData &dst, double ratio){
 // 一般線性插補
 void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 	// 重設置目標圖像大小
-	dst.resize(src.width*ratio, src.height*ratio, src.bits);
+	dst.resize((uint16_t)(src.width*ratio), (uint16_t)(src.height*ratio), src.bits);
 	// 縮小的倍率
 	double r1W = ((double)src.width )/(dst.width );
 	double r1H = ((double)src.height)/(dst.height);
@@ -217,8 +217,8 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 	double deviH = ((src.height-1.0) - (dst.height-1.0)*(r1H)) /dst.height;
 
 #pragma omp parallel for
-	for (int j = 0; j < dst.height; j++) {
-		for (int i = 0; i < dst.width; i++) {
+	for (int j = 0; j < (int)dst.height; j++) {
+		for (int i = 0; i < (int)dst.width; i++) {
 			double srcY=0, srcX=0;
 			// 調整對齊
 			if (ratio < 1.0) {
@@ -231,7 +231,7 @@ void bilinear(const ImgData& src, ImgData& dst, double ratio) {
 			auto dstImg = dst.at2d(j, i);
 			auto srcImg = src.at2d_linear(srcY, srcX);
 			for (size_t rgb = 0; rgb < src.bits>>3; rgb++) {
-				dstImg[rgb] = srcImg[rgb];
+				dstImg[rgb] = static_cast<unsigned char>(srcImg[rgb]);
 			}
 		}
 	}
