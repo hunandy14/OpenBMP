@@ -127,14 +127,14 @@ public:
 	static void raw2gray(std::vector<uch>& dst, const std::vector<uch>& src) {
 		if (&dst == &src) {
 			// 同一個來源轉換完再resize
-			for (int i = 0; i < (int)(src.size()/3.0); ++i)
-				dst[i] = rgb2gray(&src[i*3.0]);
-			dst.resize(src.size()/3.0);
+			for (int i = 0; i < (int)(src.size()/3); ++i)
+				dst[i] = rgb2gray(&src[i*3]);
+			dst.resize(src.size()/3);
 		} else {
 			// 通常情況先設置好大小才轉換
-			dst.resize(src.size()/3.0);
-			for (int i = 0; i < (int)(src.size()/3.0); ++i)
-				dst[i] = rgb2gray(&src[i*3.0]);
+			dst.resize(src.size()/3);
+			for (int i = 0; i < (int)(src.size()/3); ++i)
+				dst[i] = rgb2gray(&src[i*3]);
 		}
 	}
 public:
