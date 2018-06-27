@@ -1,8 +1,12 @@
 /*****************************************************************
-Name : OpenBMP Version 1.0.1
+Name : OpenBMP
 Date : 2017/06/11
 By   : CharlotteHonG
 Final: 2018/06/01
+
+詳細實作說明可以參考：
+https://charlottehong.blogspot.com/2017/06/c-raw-bmp.html
+有詳細的BMP檔頭與函式解說
 *****************************************************************/
 #include <iostream>
 using namespace std;
